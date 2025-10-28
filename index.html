@@ -6,6 +6,64 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="icon" type="image/jpeg" href="maven-logo.jpg">
 		<style>
+			/* Night Mode Toggle - Glassy Style */
+			#night-mode-toggle {
+				position: fixed;
+				top: 20px;
+				right: 20px;
+				z-index: 1000;
+				background: var(--glass-bg);
+				border: 1px solid var(--glass-border);
+				border-radius: 50%;
+				width: 50px;
+				height: 50px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				cursor: pointer;
+				font-size: 1.5rem;
+				backdrop-filter: blur(10px);
+				transition: all 0.5s ease;
+				box-shadow: 0 5px 15px var(--shadow-color);
+			}
+
+			#night-mode-toggle:hover {
+				transform: translateY(-2px) scale(1.1);
+				background: var(--glass-hover);
+			}
+
+			/* Light Theme (Default) */
+			body.light-theme {
+				--bg-color: #ffffff;
+				--text-color: #000000;
+				--text-muted: rgba(0, 0, 0, 0.7);
+				--glass-bg: rgba(255, 255, 255, 0.7);
+				--glass-border: rgba(0, 0, 0, 0.3);
+				--glass-hover: rgba(255, 255, 255, 0.9);
+				--shadow-color: rgba(0, 0, 0, 0.1);
+				--star-color: #000000;
+				--connection-color: rgba(0, 0, 0, 0.1);
+			}
+
+			/* Dark Theme */
+			body.dark-theme {
+				--bg-color: #0a0a2a;
+				--text-color: #f0f0f0;
+				--text-muted: rgba(240, 240, 240, 0.7);
+				--glass-bg: rgba(255, 255, 255, 0.1);
+				--glass-border: rgba(255, 255, 255, 0.2);
+				--glass-hover: rgba(255, 255, 255, 0.15);
+				--shadow-color: rgba(0, 0, 0, 0.3);
+				--star-color: #ffffff;
+				--connection-color: rgba(255, 255, 255, 0.3);
+			}
+
+			/* Smooth transitions for all elements */
+			body, #starCanvas, #main-content, .nav-button, .bottom-nav-button, 
+			.section-content, .form-container, .form-wrapper, .back-button {
+				transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+			}
+
 			/* Star Background Styles */
 			#starCanvas {
 				position: fixed;
@@ -15,7 +73,7 @@
 				height: 100%;
 				z-index: -2;
 				pointer-events: none;
-				background: #ffffff;
+				background: var(--bg-color);
 			}
 			
 			/* Main Content Styles */
@@ -27,10 +85,10 @@
 				flex-direction: column;
 				justify-content: center;
 				align-items: center;
-				color: #000000;
+				color: var(--text-color);
 				font-family: Arial, sans-serif;
-				transition: all 0.8s ease;
 				padding: 1rem;
+				text-align: center;
 			}
 			
 			#main-content.scrolled {
@@ -39,69 +97,68 @@
 				pointer-events: none;
 			}
 			
-			/* Hey Text Styles - Responsive */
-			#hey-text {
-				font-size: clamp(3rem, 15vw, 8rem); /* Responsive between 3rem and 8rem */
+			/* Main Heading */
+			#main-heading {
+				font-size: clamp(2rem, 8vw, 4rem);
 				font-weight: normal;
-				color: #000000;
-				text-align: center;
+				color: var(--text-color);
 				margin-bottom: 1rem;
-				transition: all 0.8s ease;
+				line-height: 1.2;
+			}
+
+			.dark-theme #main-heading {
+				text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 			}
 			
-			/* Scroll Prompt - Responsive */
+			/* Scroll Prompt */
 			#scroll-prompt {
 				font-size: clamp(0.9rem, 3vw, 1.2rem);
-				color: rgba(0, 0, 0, 0.7);
-				text-align: center;
+				color: var(--text-muted);
 				margin-bottom: 2rem;
-				transition: all 0.8s ease;
 			}
 			
-			/* Main Navigation Buttons - Responsive & Horizontal */
+			/* Navigation Buttons */
 			#nav-buttons {
 				display: flex;
 				gap: clamp(0.8rem, 3vw, 1.5rem);
-				transition: all 0.8s ease;
 				flex-wrap: wrap;
 				justify-content: center;
 			}
 			
 			.nav-button {
-				color: rgba(0, 0, 0, 0.8);
+				color: var(--text-color);
 				text-decoration: none;
 				font-size: clamp(0.8rem, 2.5vw, 1.1rem);
 				font-weight: normal;
 				text-transform: uppercase;
 				letter-spacing: 2px;
-				transition: all 0.3s ease;
 				padding: clamp(0.8rem, 2vw, 1rem) clamp(1.2rem, 4vw, 2rem);
-				border: 1px solid rgba(0, 0, 0, 0.3);
+				border: 1px solid var(--glass-border);
 				border-radius: 8px;
-				background: rgba(255, 255, 255, 0.7);
+				background: var(--glass-bg);
 				backdrop-filter: blur(10px);
 				white-space: nowrap;
 			}
 			
 			.nav-button:hover {
-				color: #000000;
-				border-color: rgba(0, 0, 0, 0.6);
-				background: rgba(255, 255, 255, 0.9);
+				color: var(--text-color);
+				border-color: var(--glass-border);
+				background: var(--glass-hover);
 				transform: translateY(-2px);
-				box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+				box-shadow: 0 5px 15px var(--shadow-color);
 			}
 			
-			/* Bottom Navigation - Smaller & Horizontal */
+			/* Bottom Navigation */
 			#bottom-nav {
 				position: fixed;
 				bottom: -100px;
 				left: 50%;
 				transform: translateX(-50%);
 				z-index: 100;
-				transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 				opacity: 0;
 				width: 100%;
 				padding: 0 1rem;
+				transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
 			}
 			
 			#bottom-nav.visible {
@@ -117,30 +174,29 @@
 			}
 			
 			.bottom-nav-button {
-				color: rgba(0, 0, 0, 0.8);
+				color: var(--text-color);
 				text-decoration: none;
-				font-size: clamp(0.7rem, 2vw, 0.9rem); /* Smaller than main nav */
+				font-size: clamp(0.7rem, 2vw, 0.9rem);
 				font-weight: normal;
 				text-transform: uppercase;
 				letter-spacing: 1px;
-				transition: all 0.3s ease;
 				padding: clamp(0.6rem, 1.5vw, 0.8rem) clamp(1rem, 3vw, 1.5rem);
-				border: 1px solid rgba(0, 0, 0, 0.3);
+				border: 1px solid var(--glass-border);
 				border-radius: 6px;
-				background: rgba(255, 255, 255, 0.7);
+				background: var(--glass-bg);
 				backdrop-filter: blur(10px);
 				white-space: nowrap;
 			}
 			
 			.bottom-nav-button:hover {
-				color: #000000;
-				border-color: rgba(0, 0, 0, 0.6);
-				background: rgba(255, 255, 255, 0.9);
+				color: var(--text-color);
+				border-color: var(--glass-border);
+				background: var(--glass-hover);
 				transform: translateY(-2px);
-				box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+				box-shadow: 0 5px 15px var(--shadow-color);
 			}
 			
-			/* Content Sections - Responsive */
+			/* Content Sections */
 			.content-section {
 				min-height: 100vh;
 				display: flex;
@@ -149,7 +205,6 @@
 				padding: clamp(1rem, 5vw, 2rem);
 				opacity: 0;
 				transform: translateY(50px);
-				transition: all 1s ease;
 			}
 			
 			.content-section.visible {
@@ -158,41 +213,34 @@
 			}
 			
 			.section-content {
-				background: rgba(255, 255, 255, 0.8);
+				background: var(--glass-bg);
 				backdrop-filter: blur(10px);
-				border: 1px solid rgba(0, 0, 0, 0.1);
+				border: 1px solid var(--glass-border);
 				border-radius: 15px;
 				padding: clamp(1.5rem, 5vw, 3rem);
 				width: 100%;
 				max-width: 600px;
 				text-align: center;
-				box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+				box-shadow: 0 10px 30px var(--shadow-color);
 			}
 			
 			.section-content h2 {
 				font-size: clamp(1.8rem, 6vw, 2.5rem);
 				margin-bottom: 1.5rem;
-				color: #000000;
+				color: var(--text-color);
+			}
+
+			.dark-theme .section-content h2 {
+				text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 			}
 			
 			.section-content p {
 				font-size: clamp(1rem, 3vw, 1.2rem);
 				line-height: 1.6;
-				color: rgba(0, 0, 0, 0.8);
+				color: var(--text-color);
 			}
 			
-			/* Particle Styles */
-			.particle {
-				position: absolute;
-				width: 4px;
-				height: 4px;
-				background: #000000;
-				border-radius: 50%;
-				pointer-events: none;
-				z-index: 5;
-			}
-			
-			/* Form Page Styles - Mobile Optimized */
+			/* Form Page Styles */
 			.form-container {
 				position: fixed;
 				top: 0;
@@ -208,43 +256,45 @@
 				overflow-y: auto;
 				backdrop-filter: blur(5px);
 			}
+
+			.dark-theme .form-container {
+				background: rgba(10, 10, 42, 0.9);
+			}
 			
 			.form-container.active {
 				display: flex;
 			}
 			
 			.form-wrapper {
-				background: rgba(255, 255, 255, 0.95);
+				background: var(--glass-bg);
 				backdrop-filter: blur(10px);
-				border: 1px solid rgba(0, 0, 0, 0.1);
+				border: 1px solid var(--glass-border);
 				border-radius: 15px;
 				padding: 1.5rem;
 				width: 100%;
 				max-width: 800px;
-				box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+				box-shadow: 0 10px 30px var(--shadow-color);
 				margin: 1rem 0;
 			}
 			
 			.back-button {
-				color: rgba(0, 0, 0, 0.8);
+				color: var(--text-color);
 				text-decoration: none;
 				font-size: clamp(0.9rem, 3vw, 1rem);
 				margin-bottom: 1rem;
 				display: inline-block;
 				padding: 0.5rem 1rem;
-				border: 1px solid rgba(0, 0, 0, 0.2);
+				border: 1px solid var(--glass-border);
 				border-radius: 5px;
-				transition: all 0.3s ease;
-				background: rgba(255, 255, 255, 0.7);
+				background: var(--glass-bg);
 			}
 			
 			.back-button:hover {
-				color: #000000;
-				border-color: rgba(0, 0, 0, 0.5);
-				background: rgba(255, 255, 255, 0.9);
+				color: var(--text-color);
+				border-color: var(--glass-border);
+				background: var(--glass-hover);
 			}
 			
-			/* Mobile-optimized iframe */
 			.form-wrapper iframe {
 				border: none;
 				border-radius: 8px;
@@ -252,29 +302,31 @@
 				height: auto;
 				min-height: 600px;
 			}
-
-			/* Remove previous mobile vertical layout - KEEP HORIZONTAL */
-			/* All buttons will stay horizontal on all screen sizes */
 		</style>
 	</head>
-	<body>
+	<body class="light-theme">
+
+		<!-- Night Mode Toggle - Glassy Circle -->
+		<div id="night-mode-toggle" title="Toggle Night Mode">
+			🌙
+		</div>
 
 		<!-- Star Background Canvas -->
 		<canvas id="starCanvas"></canvas>
 
 		<!-- Main Content -->
 		<div id="main-content">
-			<div id="hey-text">Don't you think, education should be practical?</div>
+			<div id="main-heading">Don't you think,<br>education should be practical?</div>
 			<div id="scroll-prompt">scroll to explore</div>
 			<div id="nav-buttons">
 				<a href="#" class="nav-button" data-target="welcome">Welcome</a>
-				<a href="#" class="nav-button" id="onboarding-btn">OnBoarding</a>
-				<a href="#" class="nav-button" data-target="paperwork">PaperWork</a>
+				<a href="#" class="nav-button" id="onboarding-btn">OnBoarding/registration</a>
+				<a href="#" class="nav-button" data-target="paperwork">Resources</a>
 				<a href="#" class="nav-button" data-target="contact">Get in touch</a>
 			</div>
 		</div>
 
-		<!-- Bottom Navigation - Smaller & Horizontal -->
+		<!-- Bottom Navigation -->
 		<nav id="bottom-nav">
 			<div id="bottom-buttons">
 				<a href="#" class="bottom-nav-button" data-target="welcome">Welcome</a>
@@ -287,24 +339,22 @@
 		<!-- Content Sections -->
 		<section id="welcome-section" class="content-section">
 			<div class="section-content">
-				<h2>Welcome to Our Maven Academy</h2>
-				<p>Where teaching meets innovation. We use virtual labs, GitHub and many more strings to make you achieve your skills as practically and as hands-on as possible. Based off of Melbourne, our entire culture is virtual.
-					. We believe in empowering students to become creators, problem-solvers, and innovators in programming, Ai and fluent in linguistics. Check Us out on Facebook.</p>
-				</p>
+				<h2>Welcome to Maven Academy</h2>
+				<p>Where learning meets real-world application. We believe education should equip students with practical skills that translate directly to success in their careers and daily lives.</p>
 			</div>
 		</section>
 
 		<section id="paperwork-section" class="content-section">
 			<div class="section-content">
-				<h2>PaperWork</h2>
-				<p>We have listed all the tools and resources you will ever need to master your skill of choice. Fill-out the form, and we will send you informative and structured emails on a daily basis with weekly perks like free speaking class.</p>
+				<h2>Structured & Guided learning</h2>
+				<p>Our approach focuses on hands-on experience, project-based learning, and real-world scenarios that prepare students for the challenges they'll actually face.</p>
 			</div>
 		</section>
 
 		<section id="contact-section" class="content-section">
 			<div class="section-content">
-				<h2>Connect With Us</h2>
-				<p>Ready to embark on a journey of Self-Improvement? Check us out on Facebook and click OnBoarding to register within our well designed system!!</p>
+				<h2>Join the Movement</h2>
+				<p>Ready to transform education? Connect with us to learn how we're making learning more practical, relevant, and effective for the modern world.</p>
 			</div>
 		</section>
 
@@ -316,9 +366,44 @@
 			</div>
 		</div>
 
-		<!-- Interactive Elements Script -->
 		<script>
+			// Night Mode Toggle Functionality
 			document.addEventListener('DOMContentLoaded', function() {
+				const nightModeToggle = document.getElementById('night-mode-toggle');
+				const body = document.body;
+				
+				// Check for saved theme preference or default to light
+				const savedTheme = localStorage.getItem('theme') || 'light-theme';
+				body.className = savedTheme;
+				updateToggleEmoji();
+				
+				nightModeToggle.addEventListener('click', function() {
+					// Add transition class for smooth change
+					body.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+					
+					// Toggle between light and dark themes
+					if (body.classList.contains('light-theme')) {
+						body.classList.remove('light-theme');
+						body.classList.add('dark-theme');
+						localStorage.setItem('theme', 'dark-theme');
+					} else {
+						body.classList.remove('dark-theme');
+						body.classList.add('light-theme');
+						localStorage.setItem('theme', 'light-theme');
+					}
+					updateToggleEmoji();
+					updateStars(); // Update star colors when theme changes
+				});
+				
+				function updateToggleEmoji() {
+					if (body.classList.contains('dark-theme')) {
+						nightModeToggle.innerHTML = '☀️';
+					} else {
+						nightModeToggle.innerHTML = '🌙';
+					}
+				}
+
+				// Scroll functionality with smooth transitions
 				const mainContent = document.getElementById('main-content');
 				const bottomNav = document.getElementById('bottom-nav');
 				const formPage = document.getElementById('form-page');
@@ -329,42 +414,39 @@
 				
 				let hasScrolled = false;
 
-				// Scroll interaction
 				window.addEventListener('scroll', function() {
 					const scrollY = window.scrollY;
 					
-					// Fade out main content and show bottom navigation
 					if (scrollY > 100 && !hasScrolled) {
+						mainContent.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
 						mainContent.classList.add('scrolled');
 						bottomNav.classList.add('visible');
 						hasScrolled = true;
 					} else if (scrollY === 0 && hasScrolled) {
+						mainContent.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
 						mainContent.classList.remove('scrolled');
 						bottomNav.classList.remove('visible');
 						hasScrolled = false;
 					}
 					
-					// Show content sections as user scrolls
 					contentSections.forEach(section => {
 						const rect = section.getBoundingClientRect();
 						if (rect.top < window.innerHeight * 0.75 && rect.bottom > 0) {
+							section.style.transition = 'all 1s cubic-bezier(0.4, 0, 0.2, 1)';
 							section.classList.add('visible');
 						}
 					});
 				});
 
-				// Form page functionality
 				onboardingBtn.addEventListener('click', function(e) {
 					e.preventDefault();
 					formPage.classList.add('active');
-					// Scroll to top of form when opening
 					formPage.scrollTop = 0;
 				});
 				
 				bottomOnboardingBtn.addEventListener('click', function(e) {
 					e.preventDefault();
 					formPage.classList.add('active');
-					// Scroll to top of form when opening
 					formPage.scrollTop = 0;
 				});
 				
@@ -373,7 +455,6 @@
 					formPage.classList.remove('active');
 				});
 
-				// Navigation scroll to sections
 				document.querySelectorAll('.nav-button, .bottom-nav-button').forEach(button => {
 					button.addEventListener('click', function(e) {
 						if (this.id !== 'onboarding-btn' && this.id !== 'bottom-onboarding-btn') {
@@ -381,7 +462,10 @@
 							const target = this.getAttribute('data-target');
 							const targetSection = document.getElementById(target + '-section');
 							if (targetSection) {
-								targetSection.scrollIntoView({ behavior: 'smooth' });
+								targetSection.scrollIntoView({ 
+									behavior: 'smooth',
+									block: 'center'
+								});
 							}
 						}
 					});
@@ -389,17 +473,18 @@
 			});
 		</script>
 
-		<!-- Star Background Script -->
+		<!-- Enhanced Star Background Script with Theme Support -->
 		<script>
-			document.addEventListener('DOMContentLoaded', function() {
+			let stars = [];
+			let animationFrameId;
+
+			function initializeStars() {
 				const canvas = document.getElementById('starCanvas');
 				const ctx = canvas.getContext('2d');
 				
-				let animationFrameId;
 				let mouseX = 0;
 				let mouseY = 0;
 				
-				// Set canvas size
 				function setCanvasSize() {
 					canvas.width = window.innerWidth;
 					canvas.height = window.innerHeight;
@@ -408,33 +493,54 @@
 				setCanvasSize();
 				window.addEventListener('resize', setCanvasSize);
 				
-				// Star class with black stars on white background
 				class Star {
 					constructor() {
 						this.x = Math.random() * canvas.width;
 						this.y = Math.random() * canvas.height;
-						this.size = Math.random() * 1.5 + 0.3;
-						this.speedX = (Math.random() - 0.5) * 0.2;
-						this.speedY = (Math.random() - 0.5) * 0.2;
-						this.opacity = Math.random() * 0.7 + 0.3;
+						this.baseSize = Math.random() * 2 + 1;
+						this.size = this.baseSize;
+						this.speedX = (Math.random() - 0.5) * 0.3;
+						this.speedY = (Math.random() - 0.5) * 0.3;
+						this.opacity = Math.random() * 0.8 + 0.2;
 						this.baseX = this.x;
 						this.baseY = this.y;
-						this.pulseSpeed = Math.random() * 0.008 + 0.005;
+						this.pulseSpeed = Math.random() * 0.01 + 0.005;
 						this.pulseOffset = Math.random() * Math.PI * 2;
 						this.flickerTimer = 0;
-						this.flickerDelay = Math.random() * 200 + 100;
+						this.flickerDelay = Math.random() * 100 + 50;
+						this.flickerIntensity = 0;
+						this.updateColor();
+					}
+					
+					updateColor() {
+						const isDarkTheme = document.body.classList.contains('dark-theme');
+						
+						if (isDarkTheme) {
+							// Dark theme - colorful stars
+							this.colorType = Math.random();
+							if (this.colorType < 0.7) {
+								this.color = { r: 255, g: 255, b: 255 }; // White
+							} else if (this.colorType < 0.85) {
+								this.color = { r: 200, g: 220, b: 255 }; // Light blue
+							} else {
+								this.color = { r: 180, g: 255, b: 255 }; // Cyan
+							}
+						} else {
+							// Light theme - black stars
+							this.color = { r: 0, g: 0, b: 0 }; // Black
+						}
 					}
 					
 					update() {
 						const dx = mouseX - this.x;
 						const dy = mouseY - this.y;
 						const distance = Math.sqrt(dx * dx + dy * dy);
-						const maxDistance = 150;
+						const maxDistance = 200;
 						
 						if (distance < maxDistance) {
 							const force = (maxDistance - distance) / maxDistance;
-							this.x -= (dx / distance) * force * 2;
-							this.y -= (dy / distance) * force * 2;
+							this.x -= (dx / distance) * force * 3;
+							this.y -= (dy / distance) * force * 3;
 						} else {
 							this.x += (this.baseX - this.x) * 0.02;
 							this.y += (this.baseY - this.y) * 0.02;
@@ -443,37 +549,35 @@
 						this.x += this.speedX;
 						this.y += this.speedY;
 						
-						// Wrap around edges
-						if (this.x < -20) this.x = canvas.width + 20;
-						if (this.x > canvas.width + 20) this.x = -20;
-						if (this.y < -20) this.y = canvas.height + 20;
-						if (this.y > canvas.height + 20) this.y = -20;
+						if (this.x < -50) this.x = canvas.width + 50;
+						if (this.x > canvas.width + 50) this.x = -50;
+						if (this.y < -50) this.y = canvas.height + 50;
+						if (this.y > canvas.height + 50) this.y = -50;
 						
-						// Natural flickering with random delays
 						this.flickerTimer++;
 						if (this.flickerTimer > this.flickerDelay) {
 							this.flickerTimer = 0;
-							this.flickerDelay = Math.random() * 300 + 150;
-							this.opacity = Math.random() * 0.5 + 0.4;
+							this.flickerDelay = Math.random() * 80 + 40;
+							this.flickerIntensity = Math.random() * 0.6 + 0.4;
+							this.opacity = Math.random() * 0.6 + 0.4;
 						}
 						
-						// Gentle pulsing overlay
-						const pulse = Math.sin(Date.now() * this.pulseSpeed + this.pulseOffset) * 0.12;
-						this.currentOpacity = Math.max(0.2, Math.min(0.9, this.opacity + pulse));
+						const pulse = Math.sin(Date.now() * this.pulseSpeed + this.pulseOffset) * 0.2;
+						this.currentOpacity = Math.max(0.3, Math.min(1, this.opacity + pulse));
+						this.size = this.baseSize * (1 + this.flickerIntensity * 0.5);
 					}
 					
 					draw() {
-						// Main star - black
 						ctx.beginPath();
 						ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-						ctx.fillStyle = `rgba(0, 0, 0, ${this.currentOpacity})`;
+						ctx.fillStyle = `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.currentOpacity})`;
 						ctx.fill();
 						
-						// Black glow
 						ctx.beginPath();
-						ctx.arc(this.x, this.y, this.size * 1.8, 0, Math.PI * 2);
-						const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 1.8);
-						gradient.addColorStop(0, `rgba(0, 0, 0, ${this.currentOpacity * 0.3})`);
+						ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+						const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
+						gradient.addColorStop(0, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.currentOpacity * 0.4})`);
+						gradient.addColorStop(0.5, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.currentOpacity * 0.2})`);
 						gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 						ctx.fillStyle = gradient;
 						ctx.fill();
@@ -481,59 +585,65 @@
 				}
 				
 				// Create stars
-				const stars = [];
-				const starCount = Math.min(120, Math.floor(window.innerWidth * window.innerHeight / 6000));
+				stars = [];
+				const starCount = Math.min(80, Math.floor(window.innerWidth * window.innerHeight / 4000));
 				
 				for (let i = 0; i < starCount; i++) {
-					stars.push(new Star());
+					const star = new Star();
+					stars.push(star);
 				}
 				
-				// Draw connections between stars - black
 				function drawConnections() {
+					const isDarkTheme = document.body.classList.contains('dark-theme');
+					const connectionColor = isDarkTheme ? '255, 255, 255' : '0, 0, 0';
+					
 					for (let i = 0; i < stars.length; i++) {
 						for (let j = i + 1; j < stars.length; j++) {
 							const dx = stars[i].x - stars[j].x;
 							const dy = stars[i].y - stars[j].y;
 							const distance = Math.sqrt(dx * dx + dy * dy);
 							
-							if (distance < 100) {
+							if (distance < 150) {
 								ctx.beginPath();
 								ctx.moveTo(stars[i].x, stars[i].y);
 								ctx.lineTo(stars[j].x, stars[j].y);
-								const connectionOpacity = 0.1 * (1 - distance / 100);
-								ctx.strokeStyle = `rgba(0, 0, 0, ${connectionOpacity})`;
-								ctx.lineWidth = 0.25;
+								
+								const connectionOpacity = 0.3 * (1 - distance / 150);
+								ctx.strokeStyle = `rgba(${connectionColor}, ${connectionOpacity})`;
+								ctx.lineWidth = 1.5;
+								ctx.stroke();
+								
+								ctx.beginPath();
+								ctx.moveTo(stars[i].x, stars[i].y);
+								ctx.lineTo(stars[j].x, stars[j].y);
+								ctx.strokeStyle = `rgba(${connectionColor}, ${connectionOpacity * 0.3})`;
+								ctx.lineWidth = 4;
 								ctx.stroke();
 							}
 						}
 					}
 				}
 				
-				// Animation loop
 				function animate() {
-					// Clear with white background
-					ctx.fillStyle = '#ffffff';
+					const isDarkTheme = document.body.classList.contains('dark-theme');
+					ctx.fillStyle = isDarkTheme ? '#0a0a2a' : '#ffffff';
 					ctx.fillRect(0, 0, canvas.width, canvas.height);
 					
-					// Update and draw stars
+					drawConnections();
+					
 					stars.forEach(star => {
 						star.update();
 						star.draw();
 					});
 					
-					// Draw connections
-					drawConnections();
-					
 					animationFrameId = requestAnimationFrame(animate);
 				}
 				
-				// Mouse move handler
 				function handleMouseMove(e) {
 					mouseX = e.clientX;
 					mouseY = e.clientY;
 				}
 				
-				// Touch move handler
 				function handleTouchMove(e) {
 					if (e.touches.length > 0) {
 						mouseX = e.touches[0].clientX;
@@ -545,7 +655,20 @@
 				window.addEventListener('touchmove', handleTouchMove);
 				
 				// Start animation
+				if (animationFrameId) {
+					cancelAnimationFrame(animationFrameId);
+				}
 				animate();
+			}
+
+			// Function to update stars when theme changes
+			function updateStars() {
+				stars.forEach(star => star.updateColor());
+			}
+
+			// Initialize stars when page loads
+			document.addEventListener('DOMContentLoaded', function() {
+				initializeStars();
 			});
 		</script>
 
