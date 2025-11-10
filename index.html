@@ -1,676 +1,951 @@
-<!DOCTYPE HTML>
-<html>
-	<head>
-		<title>Maven Academy</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<link rel="icon" type="image/jpeg" href="maven-logo.jpg">
-		<style>
-			/* Night Mode Toggle - Glassy Style */
-			#night-mode-toggle {
-				position: fixed;
-				top: 20px;
-				right: 20px;
-				z-index: 1000;
-				background: var(--glass-bg);
-				border: 1px solid var(--glass-border);
-				border-radius: 50%;
-				width: 50px;
-				height: 50px;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				cursor: pointer;
-				font-size: 1.5rem;
-				backdrop-filter: blur(10px);
-				transition: all 0.5s ease;
-				box-shadow: 0 5px 15px var(--shadow-color);
-			}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maven Academy | Practical English Education</title>
+    <link rel="icon" type="image/jpeg" href="maven-logo.jpg">
+    <style>
+        /* CSS Variables for Theme Management */
+        :root {
+            --bg-color: #0a0a2a;
+            --text-color: #f0f0f0;
+            --text-muted: rgba(240, 240, 240, 0.7);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-hover: rgba(255, 255, 255, 0.15);
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --star-color: #ffffff;
+            --connection-color: rgba(255, 255, 255, 0.3);
+            --accent-color: #4a90e2;
+            --accent-hover: #5da2ff;
+        }
 
-			#night-mode-toggle:hover {
-				transform: translateY(-2px) scale(1.1);
-				background: var(--glass-hover);
-			}
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-			/* Light Theme (Default) */
-			body.light-theme {
-				--bg-color: #ffffff;
-				--text-color: #000000;
-				--text-muted: rgba(0, 0, 0, 0.7);
-				--glass-bg: rgba(255, 255, 255, 0.7);
-				--glass-border: rgba(0, 0, 0, 0.3);
-				--glass-hover: rgba(255, 255, 255, 0.9);
-				--shadow-color: rgba(0, 0, 0, 0.1);
-				--star-color: #000000;
-				--connection-color: rgba(0, 0, 0, 0.1);
-			}
+        html {
+            scroll-behavior: smooth;
+        }
 
-			/* Dark Theme */
-			body.dark-theme {
-				--bg-color: #0a0a2a;
-				--text-color: #f0f0f0;
-				--text-muted: rgba(240, 240, 240, 0.7);
-				--glass-bg: rgba(255, 255, 255, 0.1);
-				--glass-border: rgba(255, 255, 255, 0.2);
-				--glass-hover: rgba(255, 255, 255, 0.15);
-				--shadow-color: rgba(0, 0, 0, 0.3);
-				--star-color: #ffffff;
-				--connection-color: rgba(255, 255, 255, 0.3);
-			}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            line-height: 1.6;
+            transition: background-color 1.2s ease, color 1.2s ease;
+        }
 
-			/* Smooth transitions for all elements */
-			body, #starCanvas, #main-content, .nav-button, .bottom-nav-button, 
-			.section-content, .form-container, .form-wrapper, .back-button {
-				transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-			}
+        /* Night Mode Toggle - Mobile Optimized */
+        #night-mode-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1000;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.3rem;
+            backdrop-filter: blur(15px);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 15px var(--shadow-color);
+        }
 
-			/* Star Background Styles */
-			#starCanvas {
-				position: fixed;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-				z-index: -2;
-				pointer-events: none;
-				background: var(--bg-color);
-			}
-			
-			/* Main Content Styles */
-			#main-content {
-				position: relative;
-				z-index: 1;
-				min-height: 100vh;
-				display: flex;
-				flex-direction: column;
-				justify-content: center;
-				align-items: center;
-				color: var(--text-color);
-				font-family: Arial, sans-serif;
-				padding: 1rem;
-				text-align: center;
-			}
-			
-			#main-content.scrolled {
-				opacity: 0;
-				transform: translateY(-50px);
-				pointer-events: none;
-			}
-			
-			/* Main Heading */
-			#main-heading {
-				font-size: clamp(2rem, 8vw, 4rem);
-				font-weight: normal;
-				color: var(--text-color);
-				margin-bottom: 1rem;
-				line-height: 1.2;
-			}
+        #night-mode-toggle:hover {
+            transform: translateY(-2px) scale(1.1);
+            background: var(--glass-hover);
+            box-shadow: 0 6px 20px var(--shadow-color);
+        }
 
-			.dark-theme #main-heading {
-				text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-			}
-			
-			/* Scroll Prompt */
-			#scroll-prompt {
-				font-size: clamp(0.9rem, 3vw, 1.2rem);
-				color: var(--text-muted);
-				margin-bottom: 2rem;
-			}
-			
-			/* Navigation Buttons */
-			#nav-buttons {
-				display: flex;
-				gap: clamp(0.8rem, 3vw, 1.5rem);
-				flex-wrap: wrap;
-				justify-content: center;
-			}
-			
-			.nav-button {
-				color: var(--text-color);
-				text-decoration: none;
-				font-size: clamp(0.8rem, 2.5vw, 1.1rem);
-				font-weight: normal;
-				text-transform: uppercase;
-				letter-spacing: 2px;
-				padding: clamp(0.8rem, 2vw, 1rem) clamp(1.2rem, 4vw, 2rem);
-				border: 1px solid var(--glass-border);
-				border-radius: 8px;
-				background: var(--glass-bg);
-				backdrop-filter: blur(10px);
-				white-space: nowrap;
-			}
-			
-			.nav-button:hover {
-				color: var(--text-color);
-				border-color: var(--glass-border);
-				background: var(--glass-hover);
-				transform: translateY(-2px);
-				box-shadow: 0 5px 15px var(--shadow-color);
-			}
-			
-			/* Bottom Navigation */
-			#bottom-nav {
-				position: fixed;
-				bottom: -100px;
-				left: 50%;
-				transform: translateX(-50%);
-				z-index: 100;
-				opacity: 0;
-				width: 100%;
-				padding: 0 1rem;
-				transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
-			}
-			
-			#bottom-nav.visible {
-				bottom: 20px;
-				opacity: 1;
-			}
-			
-			#bottom-buttons {
-				display: flex;
-				gap: clamp(0.6rem, 2vw, 1rem);
-				justify-content: center;
-				flex-wrap: wrap;
-			}
-			
-			.bottom-nav-button {
-				color: var(--text-color);
-				text-decoration: none;
-				font-size: clamp(0.7rem, 2vw, 0.9rem);
-				font-weight: normal;
-				text-transform: uppercase;
-				letter-spacing: 1px;
-				padding: clamp(0.6rem, 1.5vw, 0.8rem) clamp(1rem, 3vw, 1.5rem);
-				border: 1px solid var(--glass-border);
-				border-radius: 6px;
-				background: var(--glass-bg);
-				backdrop-filter: blur(10px);
-				white-space: nowrap;
-			}
-			
-			.bottom-nav-button:hover {
-				color: var(--text-color);
-				border-color: var(--glass-border);
-				background: var(--glass-hover);
-				transform: translateY(-2px);
-				box-shadow: 0 5px 15px var(--shadow-color);
-			}
-			
-			/* Content Sections */
-			.content-section {
-				min-height: 100vh;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				padding: clamp(1rem, 5vw, 2rem);
-				opacity: 0;
-				transform: translateY(50px);
-			}
-			
-			.content-section.visible {
-				opacity: 1;
-				transform: translateY(0);
-			}
-			
-			.section-content {
-				background: var(--glass-bg);
-				backdrop-filter: blur(10px);
-				border: 1px solid var(--glass-border);
-				border-radius: 15px;
-				padding: clamp(1.5rem, 5vw, 3rem);
-				width: 100%;
-				max-width: 600px;
-				text-align: center;
-				box-shadow: 0 10px 30px var(--shadow-color);
-			}
-			
-			.section-content h2 {
-				font-size: clamp(1.8rem, 6vw, 2.5rem);
-				margin-bottom: 1.5rem;
-				color: var(--text-color);
-			}
+        /* Star Background Styles */
+        #starCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            pointer-events: none;
+            background: var(--bg-color);
+            opacity: 0.85; /* Increased visibility */
+        }
+        
+        /* Main Content Styles - Mobile First */
+        #main-content {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color);
+            padding: 1rem;
+            text-align: center;
+            transition: all 2.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        
+        #main-content.scrolled {
+            opacity: 0;
+            transform: translateY(-30px);
+            pointer-events: none;
+        }
+        
+        /* Main Heading - Mobile Optimized */
+        #main-heading {
+            font-size: clamp(1.8rem, 6vw, 3rem);
+            font-weight: 300;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            line-height: 1.3;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            transition: opacity 2.5s ease, transform 2.5s ease;
+            max-width: 95%;
+            padding: 0 1rem;
+        }
 
-			.dark-theme .section-content h2 {
-				text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-			}
-			
-			.section-content p {
-				font-size: clamp(1rem, 3vw, 1.2rem);
-				line-height: 1.6;
-				color: var(--text-color);
-			}
-			
-			/* Form Page Styles */
-			.form-container {
-				position: fixed;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-				background: rgba(255, 255, 255, 0.85);
-				z-index: 1000;
-				display: none;
-				align-items: flex-start;
-				justify-content: center;
-				padding: 1rem;
-				overflow-y: auto;
-				backdrop-filter: blur(5px);
-			}
+        #quote-author {
+            font-size: clamp(1rem, 3.5vw, 1.3rem);
+            font-weight: 300;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            line-height: 1.4;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 3s ease 1.5s, transform 3s ease 1.5s;
+            max-width: 90%;
+            font-style: italic;
+            padding: 0 1rem;
+        }
 
-			.dark-theme .form-container {
-				background: rgba(10, 10, 42, 0.9);
-			}
-			
-			.form-container.active {
-				display: flex;
-			}
-			
-			.form-wrapper {
-				background: var(--glass-bg);
-				backdrop-filter: blur(10px);
-				border: 1px solid var(--glass-border);
-				border-radius: 15px;
-				padding: 1.5rem;
-				width: 100%;
-				max-width: 800px;
-				box-shadow: 0 10px 30px var(--shadow-color);
-				margin: 1rem 0;
-			}
-			
-			.back-button {
-				color: var(--text-color);
-				text-decoration: none;
-				font-size: clamp(0.9rem, 3vw, 1rem);
-				margin-bottom: 1rem;
-				display: inline-block;
-				padding: 0.5rem 1rem;
-				border: 1px solid var(--glass-border);
-				border-radius: 5px;
-				background: var(--glass-bg);
-			}
-			
-			.back-button:hover {
-				color: var(--text-color);
-				border-color: var(--glass-border);
-				background: var(--glass-hover);
-			}
-			
-			.form-wrapper iframe {
-				border: none;
-				border-radius: 8px;
-				width: 100%;
-				height: auto;
-				min-height: 600px;
-			}
-		</style>
-	</head>
-	<body class="light-theme">
+        #main-content.scrolled #quote-author {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Scroll Prompt - Mobile Optimized */
+        #scroll-prompt {
+            font-size: clamp(0.8rem, 2.5vw, 1rem);
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            letter-spacing: 1.5px;
+            font-weight: 300;
+            transition: opacity 2.5s ease, transform 2.5s ease;
+        }
+        
+        /* Navigation Buttons - Mobile Optimized */
+        #nav-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1.5rem;
+            transition: opacity 2.5s ease, transform 2.5s ease;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .nav-button {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 1rem 2rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            white-space: nowrap;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .nav-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.7s ease;
+        }
+        
+        .nav-button:hover {
+            color: var(--text-color);
+            border-color: var(--accent-color);
+            background: var(--glass-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px var(--shadow-color);
+        }
+        
+        .nav-button:hover::before {
+            left: 100%;
+        }
 
-		<!-- Night Mode Toggle - Glassy Circle -->
-		<div id="night-mode-toggle" title="Toggle Night Mode">
-			🌙
-		</div>
+        .primary-button {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            font-weight: 600;
+        }
+        
+        .primary-button:hover {
+            background: transparent;
+            color: var(--accent-color);
+        }
+        
+        /* Bottom Navigation - Mobile Optimized */
+        #bottom-nav {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            opacity: 0;
+            width: 100%;
+            padding: 0 1rem;
+            transition: all 2s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        
+        #bottom-nav.visible {
+            bottom: 15px;
+            opacity: 1;
+        }
+        
+        #bottom-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            justify-content: center;
+            padding: 0 0.5rem;
+        }
+        
+        .bottom-nav-button {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.7rem 1.2rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            white-space: nowrap;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .bottom-nav-button:hover {
+            color: var(--text-color);
+            border-color: var(--accent-color);
+            background: var(--glass-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        /* Content Sections - Mobile Optimized */
+        .content-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 1rem;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        
+        .content-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .section-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 2rem 1.5rem;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 25px var(--shadow-color);
+            transition: all 0.8s ease;
+        }
+        
+        .section-content:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px var(--shadow-color);
+        }
+        
+        .section-content h2 {
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+            font-weight: 300;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+        }
+        
+        .section-content h3 {
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            margin: 1.5rem 0 1rem;
+            color: var(--accent-color);
+            font-weight: 400;
+        }
+        
+        .section-content p {
+            font-size: clamp(0.95rem, 3vw, 1.1rem);
+            line-height: 1.6;
+            color: var(--text-color);
+            margin-bottom: 1.2rem;
+        }
 
-		<!-- Star Background Canvas -->
-		<canvas id="starCanvas"></canvas>
+        .section-content ul {
+            text-align: left;
+            margin: 1.5rem 0;
+            padding-left: 1.2rem;
+        }
 
-		<!-- Main Content -->
-		<div id="main-content">
-			<div id="main-heading">Don't you think,<br>education should be practical?</div>
-			<div id="scroll-prompt">scroll to explore</div>
-			<div id="nav-buttons">
-				<a href="#" class="nav-button" data-target="welcome">Welcome</a>
-				<a href="#" class="nav-button" id="onboarding-btn">OnBoarding/registration</a>
-				<a href="#" class="nav-button" data-target="paperwork">Resources</a>
-				<a href="#" class="nav-button" data-target="contact">Get in touch</a>
-			</div>
-		</div>
+        .section-content li {
+            margin-bottom: 0.8rem;
+            font-size: clamp(0.9rem, 3vw, 1rem);
+        }
 
-		<!-- Bottom Navigation -->
-		<nav id="bottom-nav">
-			<div id="bottom-buttons">
-				<a href="#" class="bottom-nav-button" data-target="welcome">Welcome</a>
-				<a href="#" class="bottom-nav-button" id="bottom-onboarding-btn">OnBoarding</a>
-				<a href="#" class="bottom-nav-button" data-target="paperwork">PaperWork</a>
-				<a href="#" class="bottom-nav-button" data-target="contact">Get in touch</a>
-			</div>
-		</nav>
+        .quote {
+            font-size: clamp(1rem, 3.5vw, 1.3rem);
+            font-style: italic;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            border-left: 3px solid var(--accent-color);
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            text-align: center;
+        }
 
-		<!-- Content Sections -->
-		<section id="welcome-section" class="content-section">
-			<div class="section-content">
-				<h2>Welcome to Maven Academy</h2>
-				<p>Where learning meets real-world application. We believe education should equip students with practical skills that translate directly to success in their careers and daily lives.</p>
-			</div>
-		</section>
+        .author {
+            display: block;
+            margin-top: 0.8rem;
+            font-size: 0.9rem;
+            font-style: normal;
+            color: var(--text-muted);
+        }
 
-		<section id="paperwork-section" class="content-section">
-			<div class="section-content">
-				<h2>Structured & Guided learning</h2>
-				<p>Our approach focuses on hands-on experience, project-based learning, and real-world scenarios that prepare students for the challenges they'll actually face.</p>
-			</div>
-		</section>
+        /* Form Page Styles */
+        .form-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 42, 0.95);
+            z-index: 1000;
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 1rem;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            transition: all 0.8s ease;
+        }
 
-		<section id="contact-section" class="content-section">
-			<div class="section-content">
-				<h2>Join the Movement</h2>
-				<p>Ready to transform education? Connect with us to learn how we're making learning more practical, relevant, and effective for the modern world.</p>
-			</div>
-		</section>
+        .form-container.active {
+            display: flex;
+        }
+        
+        .form-wrapper {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            margin: 1rem 0;
+            transition: all 0.8s ease;
+        }
+        
+        .back-button {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            padding: 0.7rem 1.2rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+        }
+        
+        .back-button:hover {
+            color: var(--text-color);
+            border-color: var(--accent-color);
+            background: var(--glass-hover);
+            transform: translateX(-5px);
+        }
+        
+        .form-wrapper iframe {
+            border: none;
+            border-radius: 10px;
+            width: 100%;
+            height: auto;
+            min-height: 500px;
+            box-shadow: 0 8px 25px var(--shadow-color);
+        }
+        
+        /* Footer Styles - Mobile Optimized */
+        footer {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            padding: 2rem 1rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
 
-		<!-- Google Form Page -->
-		<div id="form-page" class="form-container">
-			<div class="form-wrapper">
-				<a href="#" class="back-button" id="back-button">← Back to Main</a>
-				<iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeRxTcV7R06ToDUUCarpZdGU7CwOGk-k1DYJe4ck409-HVr0w/viewform?embedded=true" width="100%" height="978" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-			</div>
-		</div>
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
 
-		<script>
-			// Night Mode Toggle Functionality
-			document.addEventListener('DOMContentLoaded', function() {
-				const nightModeToggle = document.getElementById('night-mode-toggle');
-				const body = document.body;
-				
-				// Check for saved theme preference or default to light
-				const savedTheme = localStorage.getItem('theme') || 'light-theme';
-				body.className = savedTheme;
-				updateToggleEmoji();
-				
-				nightModeToggle.addEventListener('click', function() {
-					// Add transition class for smooth change
-					body.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
-					
-					// Toggle between light and dark themes
-					if (body.classList.contains('light-theme')) {
-						body.classList.remove('light-theme');
-						body.classList.add('dark-theme');
-						localStorage.setItem('theme', 'dark-theme');
-					} else {
-						body.classList.remove('dark-theme');
-						body.classList.add('light-theme');
-						localStorage.setItem('theme', 'light-theme');
-					}
-					updateToggleEmoji();
-					updateStars(); // Update star colors when theme changes
-				});
-				
-				function updateToggleEmoji() {
-					if (body.classList.contains('dark-theme')) {
-						nightModeToggle.innerHTML = '☀️';
-					} else {
-						nightModeToggle.innerHTML = '🌙';
-					}
-				}
+        .footer-logo {
+            max-width: 180px;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px var(--shadow-color);
+        }
 
-				// Scroll functionality with smooth transitions
-				const mainContent = document.getElementById('main-content');
-				const bottomNav = document.getElementById('bottom-nav');
-				const formPage = document.getElementById('form-page');
-				const onboardingBtn = document.getElementById('onboarding-btn');
-				const bottomOnboardingBtn = document.getElementById('bottom-onboarding-btn');
-				const backButton = document.getElementById('back-button');
-				const contentSections = document.querySelectorAll('.content-section');
-				
-				let hasScrolled = false;
+        .footer-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            max-width: 90%;
+        }
 
-				window.addEventListener('scroll', function() {
-					const scrollY = window.scrollY;
-					
-					if (scrollY > 100 && !hasScrolled) {
-						mainContent.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
-						mainContent.classList.add('scrolled');
-						bottomNav.classList.add('visible');
-						hasScrolled = true;
-					} else if (scrollY === 0 && hasScrolled) {
-						mainContent.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
-						mainContent.classList.remove('scrolled');
-						bottomNav.classList.remove('visible');
-						hasScrolled = false;
-					}
-					
-					contentSections.forEach(section => {
-						const rect = section.getBoundingClientRect();
-						if (rect.top < window.innerHeight * 0.75 && rect.bottom > 0) {
-							section.style.transition = 'all 1s cubic-bezier(0.4, 0, 0.2, 1)';
-							section.classList.add('visible');
-						}
-					});
-				});
+        /* Tablet Styles */
+        @media (min-width: 768px) {
+            #night-mode-toggle {
+                top: 25px;
+                right: 25px;
+                width: 55px;
+                height: 55px;
+                font-size: 1.6rem;
+            }
 
-				onboardingBtn.addEventListener('click', function(e) {
-					e.preventDefault();
-					formPage.classList.add('active');
-					formPage.scrollTop = 0;
-				});
-				
-				bottomOnboardingBtn.addEventListener('click', function(e) {
-					e.preventDefault();
-					formPage.classList.add('active');
-					formPage.scrollTop = 0;
-				});
-				
-				backButton.addEventListener('click', function(e) {
-					e.preventDefault();
-					formPage.classList.remove('active');
-				});
+            #main-heading {
+                font-size: clamp(2rem, 6vw, 3.5rem);
+                max-width: 800px;
+            }
 
-				document.querySelectorAll('.nav-button, .bottom-nav-button').forEach(button => {
-					button.addEventListener('click', function(e) {
-						if (this.id !== 'onboarding-btn' && this.id !== 'bottom-onboarding-btn') {
-							e.preventDefault();
-							const target = this.getAttribute('data-target');
-							const targetSection = document.getElementById(target + '-section');
-							if (targetSection) {
-								targetSection.scrollIntoView({ 
-									behavior: 'smooth',
-									block: 'center'
-								});
-							}
-						}
-					});
-				});
-			});
-		</script>
+            #quote-author {
+                font-size: clamp(1.2rem, 3.5vw, 1.5rem);
+                max-width: 700px;
+            }
 
-		<!-- Enhanced Star Background Script with Theme Support -->
-		<script>
-			let stars = [];
-			let animationFrameId;
+            #nav-buttons {
+                flex-direction: row;
+                max-width: 500px;
+                gap: 1.2rem;
+            }
 
-			function initializeStars() {
-				const canvas = document.getElementById('starCanvas');
-				const ctx = canvas.getContext('2d');
-				
-				let mouseX = 0;
-				let mouseY = 0;
-				
-				function setCanvasSize() {
-					canvas.width = window.innerWidth;
-					canvas.height = window.innerHeight;
-				}
-				
-				setCanvasSize();
-				window.addEventListener('resize', setCanvasSize);
-				
-				class Star {
-					constructor() {
-						this.x = Math.random() * canvas.width;
-						this.y = Math.random() * canvas.height;
-						this.baseSize = Math.random() * 2 + 1;
-						this.size = this.baseSize;
-						this.speedX = (Math.random() - 0.5) * 0.3;
-						this.speedY = (Math.random() - 0.5) * 0.3;
-						this.opacity = Math.random() * 0.8 + 0.2;
-						this.baseX = this.x;
-						this.baseY = this.y;
-						this.pulseSpeed = Math.random() * 0.01 + 0.005;
-						this.pulseOffset = Math.random() * Math.PI * 2;
-						this.flickerTimer = 0;
-						this.flickerDelay = Math.random() * 100 + 50;
-						this.flickerIntensity = 0;
-						this.updateColor();
-					}
-					
-					updateColor() {
-						const isDarkTheme = document.body.classList.contains('dark-theme');
-						
-						if (isDarkTheme) {
-							// Dark theme - colorful stars
-							this.colorType = Math.random();
-							if (this.colorType < 0.7) {
-								this.color = { r: 255, g: 255, b: 255 }; // White
-							} else if (this.colorType < 0.85) {
-								this.color = { r: 200, g: 220, b: 255 }; // Light blue
-							} else {
-								this.color = { r: 180, g: 255, b: 255 }; // Cyan
-							}
-						} else {
-							// Light theme - black stars
-							this.color = { r: 0, g: 0, b: 0 }; // Black
-						}
-					}
-					
-					update() {
-						const dx = mouseX - this.x;
-						const dy = mouseY - this.y;
-						const distance = Math.sqrt(dx * dx + dy * dy);
-						const maxDistance = 200;
-						
-						if (distance < maxDistance) {
-							const force = (maxDistance - distance) / maxDistance;
-							this.x -= (dx / distance) * force * 3;
-							this.y -= (dy / distance) * force * 3;
-						} else {
-							this.x += (this.baseX - this.x) * 0.02;
-							this.y += (this.baseY - this.y) * 0.02;
-						}
-						
-						this.x += this.speedX;
-						this.y += this.speedY;
-						
-						if (this.x < -50) this.x = canvas.width + 50;
-						if (this.x > canvas.width + 50) this.x = -50;
-						if (this.y < -50) this.y = canvas.height + 50;
-						if (this.y > canvas.height + 50) this.y = -50;
-						
-						this.flickerTimer++;
-						if (this.flickerTimer > this.flickerDelay) {
-							this.flickerTimer = 0;
-							this.flickerDelay = Math.random() * 80 + 40;
-							this.flickerIntensity = Math.random() * 0.6 + 0.4;
-							this.opacity = Math.random() * 0.6 + 0.4;
-						}
-						
-						const pulse = Math.sin(Date.now() * this.pulseSpeed + this.pulseOffset) * 0.2;
-						this.currentOpacity = Math.max(0.3, Math.min(1, this.opacity + pulse));
-						this.size = this.baseSize * (1 + this.flickerIntensity * 0.5);
-					}
-					
-					draw() {
-						ctx.beginPath();
-						ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-						ctx.fillStyle = `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.currentOpacity})`;
-						ctx.fill();
-						
-						ctx.beginPath();
-						ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
-						const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
-						gradient.addColorStop(0, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.currentOpacity * 0.4})`);
-						gradient.addColorStop(0.5, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.currentOpacity * 0.2})`);
-						gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-						ctx.fillStyle = gradient;
-						ctx.fill();
-					}
-				}
-				
-				// Create stars
-				stars = [];
-				const starCount = Math.min(80, Math.floor(window.innerWidth * window.innerHeight / 4000));
-				
-				for (let i = 0; i < starCount; i++) {
-					const star = new Star();
-					stars.push(star);
-				}
-				
-				function drawConnections() {
-					const isDarkTheme = document.body.classList.contains('dark-theme');
-					const connectionColor = isDarkTheme ? '255, 255, 255' : '0, 0, 0';
-					
-					for (let i = 0; i < stars.length; i++) {
-						for (let j = i + 1; j < stars.length; j++) {
-							const dx = stars[i].x - stars[j].x;
-							const dy = stars[i].y - stars[j].y;
-							const distance = Math.sqrt(dx * dx + dy * dy);
-							
-							if (distance < 150) {
-								ctx.beginPath();
-								ctx.moveTo(stars[i].x, stars[i].y);
-								ctx.lineTo(stars[j].x, stars[j].y);
-								
-								const connectionOpacity = 0.3 * (1 - distance / 150);
-								ctx.strokeStyle = `rgba(${connectionColor}, ${connectionOpacity})`;
-								ctx.lineWidth = 1.5;
-								ctx.stroke();
-								
-								ctx.beginPath();
-								ctx.moveTo(stars[i].x, stars[i].y);
-								ctx.lineTo(stars[j].x, stars[j].y);
-								ctx.strokeStyle = `rgba(${connectionColor}, ${connectionOpacity * 0.3})`;
-								ctx.lineWidth = 4;
-								ctx.stroke();
-							}
-						}
-					}
-				}
-				
-				function animate() {
-					const isDarkTheme = document.body.classList.contains('dark-theme');
-					ctx.fillStyle = isDarkTheme ? '#0a0a2a' : '#ffffff';
-					ctx.fillRect(0, 0, canvas.width, canvas.height);
-					
-					drawConnections();
-					
-					stars.forEach(star => {
-						star.update();
-						star.draw();
-					});
-					
-					animationFrameId = requestAnimationFrame(animate);
-				}
-				
-				function handleMouseMove(e) {
-					mouseX = e.clientX;
-					mouseY = e.clientY;
-				}
-				
-				function handleTouchMove(e) {
-					if (e.touches.length > 0) {
-						mouseX = e.touches[0].clientX;
-						mouseY = e.touches[0].clientY;
-					}
-				}
-				
-				window.addEventListener('mousemove', handleMouseMove);
-				window.addEventListener('touchmove', handleTouchMove);
-				
-				// Start animation
-				if (animationFrameId) {
-					cancelAnimationFrame(animationFrameId);
-				}
-				animate();
-			}
+            .nav-button {
+                width: auto;
+                padding: 1rem 2rem;
+            }
 
-			// Function to update stars when theme changes
-			function updateStars() {
-				stars.forEach(star => star.updateColor());
-			}
+            .section-content {
+                max-width: 700px;
+                padding: 2.5rem;
+            }
 
-			// Initialize stars when page loads
-			document.addEventListener('DOMContentLoaded', function() {
-				initializeStars();
-			});
-		</script>
+            #bottom-nav.visible {
+                bottom: 25px;
+            }
 
-	</body>
+            .bottom-nav-button {
+                font-size: 0.8rem;
+                padding: 0.8rem 1.5rem;
+            }
+
+            .form-wrapper {
+                max-width: 700px;
+                padding: 2rem;
+            }
+
+            .footer-logo {
+                max-width: 200px;
+            }
+        }
+
+        /* Desktop Styles */
+        @media (min-width: 1024px) {
+            #main-heading {
+                font-size: clamp(2.2rem, 6vw, 4rem);
+            }
+
+            .section-content {
+                max-width: 800px;
+                padding: 3rem;
+            }
+
+            .nav-button {
+                font-size: 0.9rem;
+                padding: 1rem 2.2rem;
+            }
+
+            .form-wrapper {
+                max-width: 800px;
+            }
+        }
+
+        /* Very small mobile devices */
+        @media (max-width: 360px) {
+            #main-heading {
+                font-size: 1.6rem;
+                padding: 0 0.5rem;
+            }
+
+            #quote-author {
+                font-size: 0.95rem;
+                padding: 0 0.5rem;
+            }
+
+            .nav-button {
+                padding: 0.9rem 1.5rem;
+                font-size: 0.75rem;
+            }
+
+            .section-content {
+                padding: 1.5rem 1rem;
+            }
+
+            #bottom-buttons {
+                gap: 0.5rem;
+            }
+
+            .bottom-nav-button {
+                padding: 0.6rem 1rem;
+                font-size: 0.7rem;
+            }
+
+            .form-wrapper {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+
+    <!-- Night Mode Toggle -->
+    <div id="night-mode-toggle" title="Toggle Theme">
+        ☀️
+    </div>
+
+    <!-- Star Background Canvas -->
+    <canvas id="starCanvas"></canvas>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <div id="main-heading">"Tell me and I forget. Teach me and I remember. Involve me and I learn."</div>
+        <div id="quote-author">- Benjamin Franklin</div>
+        <div id="scroll-prompt">discover practical learning</div>
+        <div id="nav-buttons">
+            <a href="courses.html" class="nav-button primary-button">VIEW OUR COURSES</a>
+            <a href="#" class="nav-button" data-target="approach">OUR APPROACH</a>
+            <a href="#" class="nav-button" id="onboarding-btn">GET STARTED</a>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav id="bottom-nav">
+        <div id="bottom-buttons">
+            <a href="courses.html" class="bottom-nav-button">VIEW COURSES</a>
+            <a href="#" class="bottom-nav-button" data-target="approach">OUR APPROACH</a>
+            <a href="#" class="bottom-nav-button" id="bottom-onboarding-btn">GET STARTED</a>
+        </div>
+    </nav>
+
+    <!-- Content Sections -->
+    <section id="approach-section" class="content-section">
+        <div class="section-content">
+            <h2>Beyond Theory: Practical Learning</h2>
+            <p>At Maven Academy, we believe knowledge without application is like a book never opened. Traditional education often focuses on memorization and theory, but real mastery comes from doing.</p>
+            
+            <div class="quote">
+                "I never teach my pupils. I only attempt to provide the conditions in which they can learn."
+                <span class="author">- Albert Einstein</span>
+            </div>
+            
+            <p>Our methodology bridges the gap between theoretical knowledge and practical application. We create environments where learning happens naturally through experience, feedback, and real-world challenges.</p>
+            
+            <h3>Why Practical Learning Matters</h3>
+            <ul>
+                <li><strong>Retention:</strong> We remember 75% of what we do compared to 10% of what we read</li>
+                <li><strong>Confidence:</strong> Practical application builds real confidence, not just theoretical knowledge</li>
+                <li><strong>Problem-Solving:</strong> Real challenges develop critical thinking and adaptability</li>
+                <li><strong>Career Readiness:</strong> Employers value practical skills over theoretical knowledge alone</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="contact-section" class="content-section">
+        <div class="section-content">
+            <h2>Ready for Real Learning?</h2>
+            <p>Join hundreds of students who have transformed their English skills through our practical, immersive approach.</p>
+            <p>Whether you're preparing for IELTS, improving your spoken English, or building foundational grammar skills, we provide the environment where real learning happens.</p>
+            <div id="nav-buttons">
+                <a href="courses.html" class="nav-button primary-button">EXPLORE COURSES</a>
+                <a href="#" class="nav-button" id="contact-onboarding-btn">SCHEDULE CONSULTATION</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Google Form Page -->
+    <div id="form-page" class="form-container">
+        <div class="form-wrapper">
+            <a href="#" class="back-button" id="back-button">← Back to Main</a>
+            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeRxTcV7R06ToDUUCarpZdGU7CwOGk-k1DYJe4ck409-HVr0w/viewform?embedded=true" width="100%" height="978" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <img src="https://drive.google.com/uc?export=view&id=1qeAzQzYsxf6kt8JxgdjdnX2ERbqWBfO1" alt="Maven Academy" class="footer-logo" onerror="this.style.display='none'">
+            <p class="footer-text">Maven Academy - Where Theory Meets Practice</p>
+            <p class="footer-text">© 2023 Maven Academy. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Night Mode Toggle Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const nightModeToggle = document.getElementById('night-mode-toggle');
+            const body = document.body;
+            const formPage = document.getElementById('form-page');
+            const onboardingBtn = document.getElementById('onboarding-btn');
+            const bottomOnboardingBtn = document.getElementById('bottom-onboarding-btn');
+            const contactOnboardingBtn = document.getElementById('contact-onboarding-btn');
+            const backButton = document.getElementById('back-button');
+            
+            // Set default theme to dark as requested
+            body.className = 'dark-theme';
+            localStorage.setItem('theme', 'dark-theme');
+            updateToggleEmoji();
+            
+            nightModeToggle.addEventListener('click', function() {
+                body.style.transition = 'all 1.2s ease';
+                
+                if (body.classList.contains('light-theme')) {
+                    body.classList.remove('light-theme');
+                    body.classList.add('dark-theme');
+                    localStorage.setItem('theme', 'dark-theme');
+                } else {
+                    body.classList.remove('dark-theme');
+                    body.classList.add('light-theme');
+                    localStorage.setItem('theme', 'light-theme');
+                }
+                updateToggleEmoji();
+                updateStars();
+            });
+            
+            function updateToggleEmoji() {
+                if (body.classList.contains('dark-theme')) {
+                    nightModeToggle.innerHTML = '☀️';
+                } else {
+                    nightModeToggle.innerHTML = '🌙';
+                }
+            }
+
+            // Scroll functionality
+            const mainContent = document.getElementById('main-content');
+            const quoteAuthor = document.getElementById('quote-author');
+            const bottomNav = document.getElementById('bottom-nav');
+            const contentSections = document.querySelectorAll('.content-section');
+            
+            let hasScrolled = false;
+
+            window.addEventListener('scroll', function() {
+                const scrollY = window.scrollY;
+                
+                if (scrollY > 30 && !hasScrolled) {
+                    mainContent.style.transition = 'all 2.5s cubic-bezier(0.19, 1, 0.22, 1)';
+                    mainContent.classList.add('scrolled');
+                    bottomNav.classList.add('visible');
+                    hasScrolled = true;
+                } else if (scrollY === 0 && hasScrolled) {
+                    mainContent.style.transition = 'all 2.5s cubic-bezier(0.19, 1, 0.22, 1)';
+                    mainContent.classList.remove('scrolled');
+                    bottomNav.classList.remove('visible');
+                    hasScrolled = false;
+                }
+                
+                contentSections.forEach(section => {
+                    const rect = section.getBoundingClientRect();
+                    if (rect.top < window.innerHeight * 0.75 && rect.bottom > 0) {
+                        section.style.transition = 'all 1.5s cubic-bezier(0.19, 1, 0.22, 1)';
+                        section.classList.add('visible');
+                    }
+                });
+            });
+
+            // Form handling
+            function openForm() {
+                formPage.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            onboardingBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                openForm();
+            });
+            
+            bottomOnboardingBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                openForm();
+            });
+            
+            contactOnboardingBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                openForm();
+            });
+            
+            backButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                formPage.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+
+            // Navigation to sections
+            document.querySelectorAll('.nav-button, .bottom-nav-button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
+                        e.preventDefault();
+                        const target = this.getAttribute('data-target');
+                        const targetSection = document.getElementById(target + '-section');
+                        if (targetSection) {
+                            targetSection.scrollIntoView({ 
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                        }
+                    }
+                });
+            });
+
+            // Initialize stars
+            initializeStars();
+        });
+
+        // Enhanced Star Background Script with Better Visibility
+        let stars = [];
+        let animationFrameId;
+
+        function initializeStars() {
+            const canvas = document.getElementById('starCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            let mouseX = 0;
+            let mouseY = 0;
+            
+            function setCanvasSize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            
+            setCanvasSize();
+            window.addEventListener('resize', setCanvasSize);
+            
+            class Star {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.baseSize = Math.random() * 1.5 + 0.5; // Larger stars
+                    this.size = this.baseSize;
+                    this.speedX = (Math.random() - 0.5) * 0.2;
+                    this.speedY = (Math.random() - 0.5) * 0.2;
+                    this.opacity = Math.random() * 0.8 + 0.3; // More visible
+                    this.baseX = this.x;
+                    this.baseY = this.y;
+                    this.pulseSpeed = Math.random() * 0.008 + 0.004;
+                    this.pulseOffset = Math.random() * Math.PI * 2;
+                    this.flickerTimer = 0;
+                    this.flickerDelay = Math.random() * 100 + 60;
+                    this.flickerIntensity = 0;
+                    this.updateColor();
+                }
+                
+                updateColor() {
+                    const isDarkTheme = document.body.classList.contains('dark-theme');
+                    
+                    if (isDarkTheme) {
+                        this.colorType = Math.random();
+                        if (this.colorType < 0.6) {
+                            this.color = { r: 255, g: 255, b: 255 };
+                        } else if (this.colorType < 0.8) {
+                            this.color = { r: 200, g: 220, b: 255 };
+                        } else if (this.colorType < 0.9) {
+                            this.color = { r: 180, g: 255, b: 255 };
+                        } else {
+                            this.color = { r: 255, g: 220, b: 180 };
+                        }
+                    } else {
+                        this.color = { r: 30, g: 30, b: 50 };
+                    }
+                }
+                
+                update() {
+                    const dx = mouseX - this.x;
+                    const dy = mouseY - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const maxDistance = 120;
+                    
+                    if (distance < maxDistance) {
+                        const force = (maxDistance - distance) / maxDistance;
+                        this.x -= (dx / distance) * force * 2;
+                        this.y -= (dy / distance) * force * 2;
+                    } else {
+                        this.x += (this.baseX - this.x) * 0.015;
+                        this.y += (this.baseY - this.y) * 0.015;
+                    }
+                    
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    
+                    if (this.x < -20) this.x = canvas.width + 20;
+                    if (this.x > canvas.width + 20) this.x = -20;
+                    if (this.y < -20) this.y = canvas.height + 20;
+                    if (this.y > canvas.height + 20) this.y = -20;
+                    
+                    this.flickerTimer++;
+                    if (this.flickerTimer > this.flickerDelay) {
+                        this.flickerTimer = 0;
+                        this.flickerDelay = Math.random() * 80 + 60;
+                        this.flickerIntensity = Math.random() * 0.8 + 0.5;
+                        this.opacity = Math.random() * 0.6 + 0.4;
+                    }
+                    
+                    const pulse = Math.sin(Date.now() * this.pulseSpeed + this.pulseOffset) * 0.3;
+                    this.currentOpacity = Math.max(0.3, Math.min(0.9, this.opacity + pulse));
+                    this.size = this.baseSize * (1 + this.flickerIntensity * 0.7);
+                }
+                
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.currentOpacity})`;
+                    ctx.fill();
+                    
+                    // Enhanced glow
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 4, 0, Math.PI * 2);
+                    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 4);
+                    gradient.addColorStop(0, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.currentOpacity * 0.6})`);
+                    gradient.addColorStop(0.5, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.currentOpacity * 0.3})`);
+                    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                }
+            }
+            
+            // Create more visible stars
+            stars = [];
+            const starCount = Math.min(80, Math.floor(window.innerWidth * window.innerHeight / 3500));
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = new Star();
+                stars.push(star);
+            }
+            
+            function drawConnections() {
+                const isDarkTheme = document.body.classList.contains('dark-theme');
+                const connectionColor = isDarkTheme ? '255, 255, 255' : '30, 30, 50';
+                
+                for (let i = 0; i < stars.length; i++) {
+                    for (let j = i + 1; j < stars.length; j++) {
+                        const dx = stars[i].x - stars[j].x;
+                        const dy = stars[i].y - stars[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 100) {
+                            ctx.beginPath();
+                            ctx.moveTo(stars[i].x, stars[i].y);
+                            ctx.lineTo(stars[j].x, stars[j].y);
+                            
+                            const connectionOpacity = 0.3 * (1 - distance / 100); // More visible connections
+                            ctx.strokeStyle = `rgba(${connectionColor}, ${connectionOpacity})`;
+                            ctx.lineWidth = 1.2; // Thicker lines
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+            
+            function animate() {
+                const isDarkTheme = document.body.classList.contains('dark-theme');
+                ctx.fillStyle = isDarkTheme ? '#0a0a2a' : '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                drawConnections();
+                
+                stars.forEach(star => {
+                    star.update();
+                    star.draw();
+                });
+                
+                animationFrameId = requestAnimationFrame(animate);
+            }
+            
+            function handleMouseMove(e) {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            }
+            
+            function handleTouchMove(e) {
+                if (e.touches.length > 0) {
+                    mouseX = e.touches[0].clientX;
+                    mouseY = e.touches[0].clientY;
+                    e.preventDefault();
+                }
+            }
+            
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('touchmove', handleTouchMove, { passive: false });
+            
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            animate();
+        }
+
+        function updateStars() {
+            stars.forEach(star => star.updateColor());
+        }
+    </script>
+
+</body>
 </html>
