@@ -1,0 +1,2492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHRONO QUEST: MIDNIGHT JUNGLE</title>
+    <style>
+        /* =============== MIDNIGHT JUNGLE STYLES =============== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at 50% 50%, #001a00 0%, #000000 100%);
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* Game Container */
+        #gameContainer {
+            position: relative;
+            width: 1024px;
+            height: 576px;
+            border: none;
+            overflow: hidden;
+            background: #001100;
+            box-shadow: 
+                0 0 60px rgba(0, 255, 100, 0.3),
+                0 0 120px rgba(0, 150, 50, 0.2);
+            border-radius: 4px;
+        }
+
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+        }
+
+        /* Jungle UI */
+        .jungle-panel {
+            position: absolute;
+            background: rgba(0, 20, 10, 0.85);
+            border: 2px solid #2a553a;
+            padding: 12px 20px;
+            color: #aaffaa;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            box-shadow: 
+                0 0 10px rgba(0, 255, 100, 0.2),
+                inset 0 0 10px rgba(0, 255, 100, 0.1);
+            border-radius: 4px;
+        }
+
+        #healthPanel {
+            top: 20px;
+            left: 20px;
+            width: 280px;
+            border-color: #4aaf7a;
+        }
+
+        #weaponPanel {
+            top: 20px;
+            right: 20px;
+            width: 220px;
+            text-align: right;
+            border-color: #8a7d4a;
+        }
+
+        #levelPanel {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            background: rgba(20, 40, 20, 0.9);
+            border-color: #ffd700;
+        }
+
+        /* Jungle Bars */
+        .jungle-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(10, 30, 15, 0.8);
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #2a553a;
+            border-radius: 2px;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4aaf7a 0%, #aaffaa 100%);
+            transition: width 0.3s ease;
+            position: relative;
+            box-shadow: 0 0 10px rgba(100, 255, 150, 0.5);
+        }
+
+        .health-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 3px,
+                rgba(255, 255, 255, 0.1) 3px,
+                rgba(255, 255, 255, 0.1) 6px
+            );
+            animation: jungleScan 2s linear infinite;
+        }
+
+        @keyframes jungleScan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Jungle Dialogue */
+        #dialogueBox {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            min-height: 150px;
+            display: none;
+            background: rgba(0, 20, 10, 0.95);
+            border: 2px solid #4aaf7a;
+            z-index: 200;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 100, 0.4);
+            border-radius: 6px;
+        }
+
+        #dialogueText {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #aaffaa;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px rgba(0, 255, 100, 0.5);
+        }
+
+        #continueBtn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #2a553a;
+            border: 1px solid #4aaf7a;
+            color: #aaffaa;
+            padding: 8px 24px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 3px;
+        }
+
+        #continueBtn:hover {
+            background: #4aaf7a;
+            transform: translateY(-1px);
+        }
+
+        /* Title Screen */
+        #titleScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0, 40, 20, 0.8) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(20, 60, 10, 0.8) 0%, transparent 50%),
+                linear-gradient(135deg, #001100 0%, #003300 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #gameTitle {
+            font-size: 64px;
+            color: #4aaf7a;
+            margin-bottom: 10px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            text-align: center;
+            text-shadow: 
+                0 0 10px rgba(100, 255, 150, 0.5),
+                2px 2px 0 #002200;
+            animation: titlePulse 3s infinite alternate;
+        }
+
+        @keyframes titlePulse {
+            0% { text-shadow: 0 0 10px rgba(100, 255, 150, 0.5), 2px 2px 0 #002200; }
+            100% { text-shadow: 0 0 20px rgba(100, 255, 150, 0.8), 3px 3px 0 #002200; }
+        }
+
+        .menu-btn {
+            background: #2a553a;
+            border: 2px solid #4aaf7a;
+            color: #aaffaa;
+            padding: 12px 36px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            margin: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+        }
+
+        .menu-btn:hover {
+            background: #4aaf7a;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(100, 255, 150, 0.3);
+        }
+
+        /* Effects */
+        .floating-notification {
+            position: absolute;
+            background: rgba(0, 30, 15, 0.9);
+            border: 1px solid #4aaf7a;
+            padding: 8px 20px;
+            color: #aaffaa;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            z-index: 150;
+            pointer-events: none;
+            animation: jungleFloat 1.5s ease-out forwards;
+            border-radius: 3px;
+        }
+
+        @keyframes jungleFloat {
+            0% { opacity: 0; transform: translate(-50%, -40%); }
+            20% { opacity: 1; transform: translate(-50%, -50%); }
+            80% { opacity: 1; transform: translate(-50%, -60%); }
+            100% { opacity: 0; transform: translate(-50%, -70%); }
+        }
+
+        /* End Screens */
+        #reunionScene, #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 20, 10, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        /* Loading */
+        #loadingScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #001100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .loading-bar {
+            width: 400px;
+            height: 20px;
+            background: rgba(10, 30, 15, 0.8);
+            border: 1px solid #2a553a;
+            margin-top: 30px;
+            overflow: hidden;
+            position: relative;
+            border-radius: 2px;
+        }
+
+        .loading-progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #2a553a 0%, #4aaf7a 100%);
+            transition: width 0.3s ease;
+        }
+
+        /* Controls */
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #4a8a6a;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+
+        /* Combo Display */
+        #comboDisplay {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            color: #ffd700;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            text-shadow: 0 0 5px #000;
+            display: none;
+        }
+
+        /* Statue Display */
+        #statueDisplay {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            color: #ffd700;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            text-shadow: 0 0 5px #000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1024" height="576"></canvas>
+        
+        <!-- Jungle UI -->
+        <div id="healthPanel" class="jungle-panel">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>VITALITY</span>
+                <span id="healthValue">100%</span>
+            </div>
+            <div class="jungle-bar">
+                <div class="health-fill" id="healthFill" style="width: 100%"></div>
+            </div>
+        </div>
+        
+        <div id="weaponPanel" class="jungle-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>WEAPON:</span>
+                <span id="currentWeapon">JUNGLE SPEAR</span>
+            </div>
+        </div>
+        
+        <div id="levelPanel" class="jungle-panel">
+            <span>LEVEL <span id="currentLevel">1</span>/3 • <span id="levelName">DARK CANOPY</span></span>
+        </div>
+        
+        <div id="comboDisplay"></div>
+        <div id="statueDisplay"></div>
+        
+        <div id="controls">
+            ←→ MOVE • SPACE JUMP • Z ATTACK • X BLOCK • ENTER INTERACT • ESC MENU
+        </div>
+
+        <!-- Screens -->
+        <div id="titleScreen">
+            <h1 id="gameTitle">CHRONO QUEST</h1>
+            <p style="color: #aaffaa; margin-bottom: 40px; font-size: 20px; letter-spacing: 3px;">
+                MIDNIGHT JUNGLE
+            </p>
+            <button class="menu-btn" id="startBtn">BEGIN JOURNEY</button>
+            <button class="menu-btn" id="instructionsBtn">SURVIVAL GUIDE</button>
+            <button class="menu-btn" id="creditsBtn">TRIBAL LEGENDS</button>
+            <p style="position: absolute; bottom: 20px; color: #2a553a; font-size: 11px; letter-spacing: 1px;">
+                THE ANCIENT JUNGLE AWAITS • 3 TEMPLES TO CONQUER
+            </p>
+        </div>
+
+        <div id="reunionScene">
+            <h1 style="font-size: 48px; color: #ffd700; margin-bottom: 30px; text-shadow: 2px 2px 0 #002200;">
+                TRIUMPH OF THE TRIBE
+            </h1>
+            <div style="font-size: 80px; margin: 30px; filter: drop-shadow(0 0 10px gold);">
+                🏆🌴
+            </div>
+            <div class="jungle-panel" style="max-width: 600px; margin-bottom: 30px; text-align: center;">
+                <p style="font-size: 16px; color: #aaffaa; line-height: 1.6; margin-bottom: 20px;">
+                    The Golden Idol has been retrieved!<br>
+                    Our tribe is saved from the ancient curse.
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin: 30px 0;">
+                    <div>
+                        <div style="font-size: 24px; color: #ffd700;">⏱️</div>
+                        <div style="font-size: 12px; color: #4a8a6a; margin: 5px 0;">TIME</div>
+                        <div style="font-size: 18px; color: #ffffff;" id="finalTime">00:00</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 24px; color: #ffd700;">💎</div>
+                        <div style="font-size: 12px; color: #4a8a6a; margin: 5px 0;">ARTIFACTS</div>
+                        <div style="font-size: 18px; color: #ffffff;" id="finalCoins">0</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 24px; color: #ffd700;">⭐</div>
+                        <div style="font-size: 12px; color: #4a8a6a; margin: 5px 0;">HONOR</div>
+                        <div style="font-size: 18px; color: #ffffff;" id="finalScore">0</div>
+                    </div>
+                </div>
+                <div style="font-size: 32px; color: gold; margin-top: 20px;" id="finalMessage"></div>
+            </div>
+            <button class="menu-btn" id="restartBtn">NEW HUNT</button>
+            <button class="menu-btn" id="titleBtn">TRIBAL COUNCIL</button>
+        </div>
+
+        <div id="gameOverScreen">
+            <h1 style="font-size: 48px; color: #ff6b6b; margin-bottom: 30px; text-shadow: 2px 2px 0 #002200;">
+                JUNGLE CONSUMED
+            </h1>
+            <div style="font-size: 80px; margin: 30px; filter: drop-shadow(0 0 10px #ff6b6b);">
+                ☠️🌿
+            </div>
+            <p style="font-size: 16px; color: #aaffaa; margin-bottom: 40px; text-align: center; line-height: 1.6; max-width: 500px;">
+                The jungle claims another warrior...<br>
+                But the tribe needs you. Rise again.
+            </p>
+            <button class="menu-btn" id="retryBtn">RISE AGAIN</button>
+            <button class="menu-btn" id="menuBtn">RETURN TO CAMP</button>
+        </div>
+
+        <div id="dialogueBox" class="jungle-panel">
+            <div id="dialogueText"></div>
+            <button id="continueBtn">CONTINUE</button>
+        </div>
+
+        <div id="loadingScreen">
+            <h2 style="color: #4aaf7a; margin-bottom: 40px; font-size: 24px; letter-spacing: 2px;">
+                AWAKENING THE JUNGLE...
+            </h2>
+            <div class="loading-bar">
+                <div class="loading-progress" id="loadingProgress"></div>
+            </div>
+            <p style="color: #4a8a6a; margin-top: 30px; font-size: 12px; letter-spacing: 1px; text-align: center;">
+                PREPARING ANCIENT TEMPLES • SUMMONING JUNGLE SPIRITS • CALIBRATING TRIBAL MAGIC
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // =============== MIDNIGHT JUNGLE GAME ENGINE ===============
+        class MidnightJungle {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.ctx.imageSmoothingEnabled = false;
+                
+                // Game state
+                this.state = {
+                    currentLevel: 1,
+                    player: {
+                        x: 150, y: 400,
+                        width: 28, height: 42,
+                        velX: 0, velY: 0,
+                        health: 100, maxHealth: 100,
+                        weapon: 'JUNGLE SPEAR',
+                        damage: 20,
+                        facingRight: true,
+                        onGround: false,
+                        isAttacking: false,
+                        isBlocking: false,
+                        invulnerable: false,
+                        invulnerableTime: 0,
+                        coins: 0,
+                        score: 0,
+                        combo: 0,
+                        multiplier: 1.0,
+                        lastHitTime: 0,
+                        hasStatue: false
+                    },
+                    gameRunning: false,
+                    paused: false,
+                    gameOver: false,
+                    inDialogue: false,
+                    screenShake: 0,
+                    cameraX: 0,
+                    cameraY: 0,
+                    particles: [],
+                    enemies: [],
+                    platforms: [],
+                    coins: [],
+                    projectiles: [],
+                    torches: [],
+                    vines: [],
+                    levelEnd: null,
+                    statue: null,
+                    den: null,
+                    keys: {},
+                    startTime: 0,
+                    currentTime: 0,
+                    levelComplete: false,
+                    returningWithStatue: false
+                };
+                
+                // Game constants
+                this.CONFIG = {
+                    WIDTH: 1024,
+                    HEIGHT: 576,
+                    GRAVITY: 0.8,
+                    JUMP_FORCE: -16,
+                    PLAYER_SPEED: 7,
+                    LEVEL_WIDTH: 3000,
+                    LEVEL_HEIGHT: 800
+                };
+                
+                // Performance
+                this.lastTime = 0;
+                this.fps = 60;
+                this.frameCount = 0;
+                this.lastFpsUpdate = 0;
+                
+                // Initialize
+                this.init();
+            }
+            
+            init() {
+                console.log('🌴 Midnight Jungle - Game Initializing...');
+                this.setupEventListeners();
+                this.createJungleBackground();
+                this.simulateLoading();
+                this.gameLoop();
+            }
+            
+            simulateLoading() {
+                const progressBar = document.getElementById('loadingProgress');
+                let progress = 0;
+                
+                const load = setInterval(() => {
+                    progress += Math.random() * 15 + 5;
+                    if (progress > 100) progress = 100;
+                    progressBar.style.width = progress + '%';
+                    
+                    if (progress >= 100) {
+                        clearInterval(load);
+                        setTimeout(() => {
+                            document.getElementById('loadingScreen').style.display = 'none';
+                            document.getElementById('titleScreen').style.display = 'flex';
+                        }, 500);
+                    }
+                }, 100);
+            }
+            
+            createJungleBackground() {
+                this.torches = [];
+                this.vines = [];
+                
+                // Create torches
+                for (let i = 0; i < 8; i++) {
+                    this.torches.push({
+                        x: Math.random() * this.CONFIG.LEVEL_WIDTH,
+                        y: 380 + Math.random() * 100,
+                        flicker: Math.random() * Math.PI * 2
+                    });
+                }
+                
+                // Create hanging vines
+                for (let i = 0; i < 20; i++) {
+                    this.vines.push({
+                        x: Math.random() * this.CONFIG.LEVEL_WIDTH,
+                        y: 100 + Math.random() * 200,
+                        length: 30 + Math.random() * 50,
+                        swing: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+            
+            loadLevel(level) {
+                console.log(`Loading Jungle Level ${level}`);
+                
+                // Clear previous level
+                this.state.platforms = [];
+                this.state.enemies = [];
+                this.state.coins = [];
+                this.state.projectiles = [];
+                this.state.levelComplete = false;
+                this.state.returningWithStatue = false;
+                this.state.player.hasStatue = false;
+                
+                // Update UI
+                document.getElementById('currentLevel').textContent = level;
+                document.getElementById('statueDisplay').style.display = 'none';
+                
+                // Level names
+                const levelNames = ['DARK CANOPY', 'TEMPLE RUINS', 'GOLDEN SANCTUM'];
+                document.getElementById('levelName').textContent = levelNames[level - 1];
+                
+                // Ground platform (different for each level)
+                const groundHeight = [450, 460, 470];
+                this.state.platforms.push({
+                    x: 0, 
+                    y: groundHeight[level - 1],
+                    width: this.CONFIG.LEVEL_WIDTH,
+                    height: 50,
+                    color: '#2a553a'
+                });
+                
+                // Level 1: Dark Canopy (Easiest)
+                if (level === 1) {
+                    // Simple platforms
+                    const platformData = [
+                        {x: 300, y: 380, width: 180},
+                        {x: 600, y: 350, width: 200},
+                        {x: 900, y: 320, width: 150},
+                        {x: 1200, y: 350, width: 180},
+                        {x: 1500, y: 380, width: 200},
+                        {x: 1800, y: 340, width: 220},
+                        {x: 2100, y: 360, width: 180},
+                        {x: 2400, y: 320, width: 200}
+                    ];
+                    
+                    platformData.forEach(p => {
+                        this.state.platforms.push({
+                            x: p.x,
+                            y: p.y,
+                            width: p.width,
+                            height: 24,
+                            color: '#3a654a'
+                        });
+                        
+                        // Add basic snakes (simple enemies)
+                        if (Math.random() > 0.4) {
+                            this.state.enemies.push({
+                                x: p.x + p.width/2 - 15,
+                                y: p.y - 30,
+                                width: 30,
+                                height: 20,
+                                health: 25,
+                                damage: 10,
+                                type: 'snake',
+                                speed: 1 + Math.random(),
+                                direction: Math.random() > 0.5 ? 1 : -1,
+                                attackCooldown: 0,
+                                attackRange: 100
+                            });
+                        }
+                        
+                        // Add jungle gems
+                        for (let i = 0; i < 3; i++) {
+                            this.state.coins.push({
+                                x: p.x + i * 35 + 20,
+                                y: p.y - 15,
+                                collected: false,
+                                value: 100
+                            });
+                        }
+                    });
+                    
+                    // Level end - Temple entrance
+                    this.state.levelEnd = {
+                        x: 2600,
+                        y: 300,
+                        width: 60,
+                        height: 100,
+                        active: true
+                    };
+                }
+                
+                // Level 2: Temple Ruins (Medium)
+                else if (level === 2) {
+                    // More challenging platform layout
+                    const platformData = [
+                        {x: 200, y: 400, width: 150, moving: false},
+                        {x: 450, y: 370, width: 120, moving: true},
+                        {x: 700, y: 340, width: 180, moving: false},
+                        {x: 1000, y: 310, width: 140, moving: true},
+                        {x: 1300, y: 350, width: 160, moving: false},
+                        {x: 1600, y: 320, width: 200, moving: true},
+                        {x: 1900, y: 290, width: 180, moving: false},
+                        {x: 2200, y: 320, width: 150, moving: true},
+                        {x: 2500, y: 350, width: 220, moving: false}
+                    ];
+                    
+                    platformData.forEach((p, index) => {
+                        this.state.platforms.push({
+                            x: p.x,
+                            y: p.y,
+                            width: p.width,
+                            height: 24,
+                            color: '#4a755a',
+                            moving: p.moving,
+                            moveOffset: index * Math.PI / 2
+                        });
+                        
+                        // Add Jaguars (faster enemies)
+                        if (Math.random() > 0.3) {
+                            this.state.enemies.push({
+                                x: p.x + p.width/2 - 20,
+                                y: p.y - 35,
+                                width: 40,
+                                height: 30,
+                                health: 35,
+                                damage: 15,
+                                type: 'jaguar',
+                                speed: 1.5 + Math.random() * 1.5,
+                                direction: Math.random() > 0.5 ? 1 : -1,
+                                attackCooldown: 0,
+                                attackRange: 120,
+                                jumpCooldown: 0
+                            });
+                        }
+                        
+                        // Add more valuable gems
+                        for (let i = 0; i < 4; i++) {
+                            this.state.coins.push({
+                                x: p.x + i * 30 + 15,
+                                y: p.y - 20,
+                                collected: false,
+                                value: 150
+                            });
+                        }
+                    });
+                    
+                    // Level end - Second temple entrance
+                    this.state.levelEnd = {
+                        x: 2700,
+                        y: 280,
+                        width: 60,
+                        height: 100,
+                        active: true
+                    };
+                }
+                
+                // Level 3: Golden Sanctum (Hardest - with statue)
+                else if (level === 3) {
+                    // Most challenging layout
+                    const platformData = [
+                        {x: 150, y: 420, width: 140, moving: false},
+                        {x: 350, y: 390, width: 130, moving: true},
+                        {x: 550, y: 360, width: 160, moving: false},
+                        {x: 800, y: 330, width: 120, moving: true},
+                        {x: 1050, y: 300, width: 180, moving: false},
+                        {x: 1350, y: 330, width: 140, moving: true},
+                        {x: 1600, y: 290, width: 200, moving: false},
+                        {x: 1900, y: 320, width: 150, moving: true},
+                        {x: 2150, y: 280, width: 180, moving: false},
+                        {x: 2450, y: 310, width: 160, moving: true}
+                    ];
+                    
+                    platformData.forEach((p, index) => {
+                        this.state.platforms.push({
+                            x: p.x,
+                            y: p.y,
+                            width: p.width,
+                            height: 24,
+                            color: '#5a856a',
+                            moving: p.moving,
+                            moveOffset: index * Math.PI / 3,
+                            moveSpeed: 0.5 + Math.random() * 0.5
+                        });
+                        
+                        // Add Temple Guardians (toughest enemies)
+                        if (Math.random() > 0.2) {
+                            this.state.enemies.push({
+                                x: p.x + p.width/2 - 25,
+                                y: p.y - 40,
+                                width: 50,
+                                height: 35,
+                                health: 50,
+                                damage: 20,
+                                type: 'guardian',
+                                speed: 2 + Math.random(),
+                                direction: Math.random() > 0.5 ? 1 : -1,
+                                attackCooldown: 60 + Math.random() * 60,
+                                attackRange: 150,
+                                jumpCooldown: 90 + Math.random() * 60,
+                                canShoot: true,
+                                shootCooldown: 120 + Math.random() * 60
+                            });
+                        }
+                        
+                        // Add golden artifacts
+                        for (let i = 0; i < 5; i++) {
+                            this.state.coins.push({
+                                x: p.x + i * 25 + 10,
+                                y: p.y - 25,
+                                collected: false,
+                                value: 200
+                            });
+                        }
+                    });
+                    
+                    // Golden statue at the end
+                    this.state.statue = {
+                        x: 2650,
+                        y: 250,
+                        width: 30,
+                        height: 40,
+                        collected: false
+                    };
+                    
+                    // Player's den (start position)
+                    this.state.den = {
+                        x: 100,
+                        y: 380,
+                        width: 80,
+                        height: 60
+                    };
+                    
+                    // No level end - need to return to den
+                    this.state.levelEnd = null;
+                }
+                
+                // Reset player position
+                this.state.player.x = 150;
+                this.state.player.y = level === 3 ? 380 : 400;
+                this.state.player.velX = 0;
+                this.state.player.velY = 0;
+                this.state.cameraX = 0;
+                this.state.cameraY = 0;
+                this.state.startTime = Date.now();
+                
+                // Show level intro
+                const levelIntros = [
+                    [
+                        "LEVEL 1: DARK CANOPY",
+                        "The jungle is thick and dangerous.",
+                        "Watch for venomous snakes in the trees.",
+                        "Collect jungle gems to earn honor."
+                    ],
+                    [
+                        "LEVEL 2: TEMPLE RUINS",
+                        "Ancient stone platforms shift and move.",
+                        "Jaguars prowl these sacred grounds.",
+                        "Stay alert - they hunt in packs."
+                    ],
+                    [
+                        "LEVEL 3: GOLDEN SANCTUM",
+                        "The final temple holds our salvation.",
+                        "Temple guardians defend the Golden Idol.",
+                        "Retrieve the idol and return to our den!"
+                    ]
+                ];
+                
+                if (levelIntros[level - 1]) {
+                    this.showDialogue(levelIntros[level - 1]);
+                }
+            }
+            
+            setupEventListeners() {
+                // Keyboard
+                document.addEventListener('keydown', (e) => {
+                    if (this.state.inDialogue) {
+                        if (e.key === 'Enter') {
+                            this.nextDialogue();
+                            e.preventDefault();
+                        }
+                        return;
+                    }
+                    
+                    if (this.state.paused) {
+                        if (e.key === 'Escape') this.togglePause();
+                        return;
+                    }
+                    
+                    switch(e.key.toLowerCase()) {
+                        case 'arrowleft':
+                        case 'a':
+                            this.state.keys.left = true;
+                            break;
+                        case 'arrowright':
+                        case 'd':
+                            this.state.keys.right = true;
+                            break;
+                        case ' ':
+                        case 'arrowup':
+                        case 'w':
+                            if (!this.state.keys.space) {
+                                this.state.keys.space = true;
+                                this.jump();
+                            }
+                            e.preventDefault();
+                            break;
+                        case 'z':
+                            if (!this.state.keys.z) {
+                                this.state.keys.z = true;
+                                this.attack();
+                            }
+                            break;
+                        case 'x':
+                            if (!this.state.keys.x) {
+                                this.state.keys.x = true;
+                                this.block();
+                            }
+                            break;
+                        case 'enter':
+                            this.interact();
+                            break;
+                        case 'escape':
+                            this.togglePause();
+                            break;
+                    }
+                });
+                
+                document.addEventListener('keyup', (e) => {
+                    switch(e.key.toLowerCase()) {
+                        case 'arrowleft':
+                        case 'a':
+                            this.state.keys.left = false;
+                            break;
+                        case 'arrowright':
+                        case 'd':
+                            this.state.keys.right = false;
+                            break;
+                        case ' ':
+                        case 'arrowup':
+                        case 'w':
+                            this.state.keys.space = false;
+                            break;
+                        case 'z':
+                            this.state.keys.z = false;
+                            this.state.player.isAttacking = false;
+                            break;
+                        case 'x':
+                            this.state.keys.x = false;
+                            this.state.player.isBlocking = false;
+                            break;
+                    }
+                });
+                
+                // UI Buttons
+                document.getElementById('startBtn').addEventListener('click', () => this.startGame());
+                document.getElementById('instructionsBtn').addEventListener('click', () => this.showTutorial());
+                document.getElementById('creditsBtn').addEventListener('click', () => this.showCredits());
+                document.getElementById('continueBtn').addEventListener('click', () => this.nextDialogue());
+                document.getElementById('retryBtn').addEventListener('click', () => this.retryGame());
+                document.getElementById('menuBtn').addEventListener('click', () => this.returnToMenu());
+                document.getElementById('restartBtn').addEventListener('click', () => this.restartGame());
+                document.getElementById('titleBtn').addEventListener('click', () => this.returnToMenu());
+            }
+            
+            startGame() {
+                console.log('🌿 Starting Midnight Jungle...');
+                document.getElementById('titleScreen').style.display = 'none';
+                this.state.gameRunning = true;
+                this.state.paused = false;
+                this.state.gameOver = false;
+                this.state.currentLevel = 1;
+                this.state.player.coins = 0;
+                this.state.player.score = 0;
+                this.state.player.health = 100;
+                this.state.startTime = Date.now();
+                
+                this.loadLevel(1);
+                
+                this.showDialogue([
+                    "THE JUNGLE CALLS",
+                    "Our tribe faces extinction.",
+                    "An ancient curse consumes our lands.",
+                    "",
+                    "Only the Golden Idol can save us.",
+                    "It lies deep in the jungle.",
+                    "Three temples guard the path.",
+                    "",
+                    "Bring back the idol, warrior.",
+                    "Our survival depends on you."
+                ]);
+            }
+            
+            showTutorial() {
+                this.showDialogue([
+                    "JUNGLE SURVIVAL GUIDE",
+                    "━━━━━━━━━━━━━━━━━━━━━━━━",
+                    "",
+                    "MOVEMENT:",
+                    "← → : Move through the jungle",
+                    "SPACE : Leap between platforms",
+                    "",
+                    "COMBAT:",
+                    "Z : Thrust your jungle spear",
+                    "X : Raise shield (reduces damage)",
+                    "Combo hits increase your damage!",
+                    "",
+                    "OBJECTIVES:",
+                    "• Collect glowing jungle gems",
+                    "• Defeat temple guardians",
+                    "• Find the Golden Idol in Temple 3",
+                    "• Return the idol to your den",
+                    "",
+                    "━━━━━━━━━━━━━━━━━━━━━━━━",
+                    "May the jungle spirits guide you."
+                ]);
+            }
+            
+            showCredits() {
+                this.showDialogue([
+                    "TRIBAL LEGENDS",
+                    "━━━━━━━━━━━━━━━━━━━━━━━━",
+                    "",
+                    "MIDNIGHT JUNGLE",
+                    "A Tribal Warrior's Journey",
+                    "",
+                    "Jungle Shaman: Kaelen",
+                    "Temple Architect: Maelis",
+                    "Combat Trainer: Thorne",
+                    "Artifact Keeper: Lyra",
+                    "",
+                    "Special Thanks:",
+                    "The Ancient Jungle Spirits",
+                    "Moonlight Panther Clan",
+                    "River Serpent Tribe",
+                    "",
+                    "© The Tribal Council",
+                    "All jungle rights reserved"
+                ]);
+            }
+            
+            showDialogue(lines) {
+                if (!Array.isArray(lines)) lines = [lines];
+                this.state.inDialogue = true;
+                this.state.paused = true;
+                
+                const dialogueBox = document.getElementById('dialogueBox');
+                const dialogueText = document.getElementById('dialogueText');
+                
+                dialogueText.innerHTML = lines.map(line => {
+                    if (line.includes('━━━━━━━━')) return `<div style="border-bottom: 1px solid #4aaf7a; margin: 5px 0;"></div>`;
+                    return line;
+                }).join('<br>');
+                
+                dialogueBox.style.display = 'block';
+            }
+            
+            nextDialogue() {
+                this.state.inDialogue = false;
+                this.state.paused = false;
+                document.getElementById('dialogueBox').style.display = 'none';
+            }
+            
+            gameLoop() {
+                const currentTime = performance.now();
+                const deltaTime = Math.min((currentTime - this.lastTime) / 16.67, 2.5);
+                this.lastTime = currentTime;
+                
+                if (this.state.gameRunning && !this.state.paused && !this.state.gameOver) {
+                    this.update(deltaTime);
+                }
+                
+                this.render();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+            
+            update(deltaTime) {
+                // Update time
+                this.state.currentTime = Date.now() - this.state.startTime;
+                
+                // Update moving platforms
+                this.updatePlatforms(deltaTime);
+                
+                // Update player
+                this.updatePlayer(deltaTime);
+                
+                // Update enemies with new AI
+                this.updateEnemies(deltaTime);
+                
+                // Update projectiles
+                this.updateProjectiles(deltaTime);
+                
+                // Update particles
+                this.updateParticles(deltaTime);
+                
+                // Update camera
+                this.updateCamera();
+                
+                // Update screen shake
+                if (this.state.screenShake > 0) {
+                    this.state.screenShake -= deltaTime * 2;
+                }
+                
+                // Check collisions
+                this.checkCollisions();
+                
+                // Check level completion
+                this.checkLevelCompletion();
+                
+                // Update combo display
+                this.updateComboDisplay();
+            }
+            
+            updatePlatforms(deltaTime) {
+                const time = Date.now() * 0.001;
+                
+                for (const platform of this.state.platforms) {
+                    if (platform.moving) {
+                        platform.x += Math.sin(time * platform.moveSpeed + platform.moveOffset) * 0.5 * deltaTime;
+                    }
+                }
+            }
+            
+            updatePlayer(deltaTime) {
+                const p = this.state.player;
+                
+                // Horizontal movement
+                if (this.state.keys.left) {
+                    p.velX = -this.CONFIG.PLAYER_SPEED;
+                    p.facingRight = false;
+                } else if (this.state.keys.right) {
+                    p.velX = this.CONFIG.PLAYER_SPEED;
+                    p.facingRight = true;
+                } else {
+                    p.velX *= 0.8;
+                }
+                
+                // Apply gravity
+                p.velY += this.CONFIG.GRAVITY * deltaTime;
+                
+                // Update position
+                p.x += p.velX * deltaTime;
+                p.y += p.velY * deltaTime;
+                
+                // Keep in bounds
+                p.x = Math.max(0, Math.min(p.x, this.CONFIG.LEVEL_WIDTH - p.width));
+                
+                // Platform collision
+                p.onGround = false;
+                for (const platform of this.state.platforms) {
+                    if (p.x < platform.x + platform.width &&
+                        p.x + p.width > platform.x &&
+                        p.y < platform.y + platform.height &&
+                        p.y + p.height > platform.y) {
+                        
+                        const overlapTop = (p.y + p.height) - platform.y;
+                        if (overlapTop > 0 && overlapTop < 20 && p.velY >= 0) {
+                            p.y = platform.y - p.height;
+                            p.velY = 0;
+                            p.onGround = true;
+                        }
+                    }
+                }
+                
+                // Fall damage
+                if (p.y > this.CONFIG.HEIGHT + 100) {
+                    p.health -= 20;
+                    p.invulnerable = true;
+                    p.invulnerableTime = 30;
+                    p.x = 150;
+                    p.y = this.state.currentLevel === 3 ? 380 : 400;
+                    p.velX = p.velY = 0;
+                    
+                    this.createJungleEffect(p.x + p.width/2, p.y + p.height/2, 15, '#ff6b6b');
+                    this.showDamageNumber(p.x, p.y, 20);
+                    this.screenShake(10);
+                    
+                    if (p.health <= 0) {
+                        p.health = 0;
+                        this.gameOver();
+                    }
+                }
+                
+                // Update invulnerability
+                if (p.invulnerable) {
+                    p.invulnerableTime -= deltaTime;
+                    if (p.invulnerableTime <= 0) {
+                        p.invulnerable = false;
+                    }
+                }
+                
+                // Update combo
+                if (Date.now() - p.lastHitTime > 2000) {
+                    p.combo = 0;
+                    p.multiplier = 1.0;
+                }
+                
+                // Update UI
+                const healthPercent = (p.health / p.maxHealth) * 100;
+                document.getElementById('healthFill').style.width = `${healthPercent}%`;
+                document.getElementById('healthValue').textContent = `${Math.round(healthPercent)}%`;
+                
+                // Update statue display if carrying
+                if (p.hasStatue) {
+                    document.getElementById('statueDisplay').style.display = 'block';
+                    document.getElementById('statueDisplay').innerHTML = '🏆 GOLDEN IDOL';
+                }
+            }
+            
+            jump() {
+                const p = this.state.player;
+                if (p.onGround) {
+                    p.velY = this.CONFIG.JUMP_FORCE;
+                    p.onGround = false;
+                    this.createJungleEffect(p.x + p.width/2, p.y + p.height, 6, '#4aaf7a');
+                }
+            }
+            
+            attack() {
+                const p = this.state.player;
+                if (p.isAttacking) return;
+                
+                p.isAttacking = true;
+                setTimeout(() => { p.isAttacking = false; }, 250);
+                
+                const attackX = p.x + (p.facingRight ? 35 : -15);
+                const attackY = p.y + 20;
+                
+                // Create attack effect
+                this.createSlashEffect(attackX, attackY, p.facingRight);
+                this.screenShake(5);
+                
+                // Check enemy hits
+                for (const enemy of this.state.enemies) {
+                    const dx = attackX - (enemy.x + enemy.width/2);
+                    const dy = attackY - (enemy.y + enemy.height/2);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 50) {
+                        const damage = Math.floor(p.damage * p.multiplier);
+                        enemy.health -= damage;
+                        
+                        // Combo system
+                        p.combo++;
+                        p.lastHitTime = Date.now();
+                        p.multiplier = 1.0 + (p.combo * 0.2);
+                        
+                        // Visual feedback
+                        this.createHitEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2, enemy.type);
+                        this.showDamageNumber(enemy.x, enemy.y, damage);
+                        this.screenShake(8);
+                        
+                        // Combo text
+                        if (p.combo > 1) {
+                            this.showFloatingText(
+                                enemy.x + enemy.width/2, 
+                                enemy.y - 25, 
+                                `x${p.combo} COMBO`,
+                                '#ffd700'
+                            );
+                        }
+                        
+                        // Score
+                        p.score += Math.floor(50 * p.multiplier);
+                        
+                        // Check if enemy died
+                        if (enemy.health <= 0) {
+                            this.createJungleEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2, 12, '#ff6b6b');
+                            p.coins += enemy.type === 'guardian' ? 3 : enemy.type === 'jaguar' ? 2 : 1;
+                            p.score += enemy.type === 'guardian' ? 300 : enemy.type === 'jaguar' ? 200 : 100;
+                            this.state.enemies = this.state.enemies.filter(e => e !== enemy);
+                        }
+                    }
+                }
+            }
+            
+            block() {
+                const p = this.state.player;
+                p.isBlocking = true;
+                setTimeout(() => { p.isBlocking = false; }, 400);
+                this.createShieldEffect(p.x + p.width/2, p.y + p.height/2);
+            }
+            
+            interact() {
+                // Check if picking up statue (level 3)
+                if (this.state.currentLevel === 3 && this.state.statue && !this.state.player.hasStatue) {
+                    const p = this.state.player;
+                    const statue = this.state.statue;
+                    const distance = Math.sqrt(
+                        Math.pow(p.x + p.width/2 - (statue.x + statue.width/2), 2) +
+                        Math.pow(p.y + p.height/2 - (statue.y + statue.height/2), 2)
+                    );
+                    
+                    if (distance < 60) {
+                        this.state.player.hasStatue = true;
+                        this.state.statue.collected = true;
+                        this.state.returningWithStatue = true;
+                        
+                        this.showDialogue([
+                            "THE GOLDEN IDOL!",
+                            "You've found the sacred artifact!",
+                            "Now hurry back to your den!",
+                            "The jungle grows more dangerous..."
+                        ]);
+                        
+                        this.createJungleEffect(statue.x + statue.width/2, statue.y + statue.height/2, 20, '#ffd700');
+                        this.screenShake(15);
+                        return;
+                    }
+                }
+                
+                // Check if at den with statue (level 3)
+                if (this.state.currentLevel === 3 && this.state.player.hasStatue && this.state.den) {
+                    const p = this.state.player;
+                    const den = this.state.den;
+                    const distance = Math.sqrt(
+                        Math.pow(p.x + p.width/2 - (den.x + den.width/2), 2) +
+                        Math.pow(p.y + p.height/2 - (den.y + den.height/2), 2)
+                    );
+                    
+                    if (distance < 80) {
+                        this.completeLevel();
+                        return;
+                    }
+                }
+                
+                // Check if at level end (levels 1-2)
+                if (this.state.levelEnd && this.state.levelEnd.active) {
+                    const p = this.state.player;
+                    const end = this.state.levelEnd;
+                    const distance = Math.sqrt(
+                        Math.pow(p.x + p.width/2 - (end.x + end.width/2), 2) +
+                        Math.pow(p.y + p.height/2 - (end.y + end.height/2), 2)
+                    );
+                    
+                    if (distance < 80) {
+                        this.completeLevel();
+                    }
+                }
+            }
+            
+            completeLevel() {
+                this.state.levelComplete = true;
+                
+                if (this.state.currentLevel < 3) {
+                    this.showDialogue([
+                        `TEMPLE ${this.state.currentLevel} CONQUERED!`,
+                        "The jungle spirits acknowledge your strength.",
+                        "Prepare for the next challenge..."
+                    ]);
+                    
+                    setTimeout(() => {
+                        this.state.currentLevel++;
+                        this.loadLevel(this.state.currentLevel);
+                    }, 1500);
+                } else {
+                    this.gameComplete();
+                }
+            }
+            
+            gameComplete() {
+                this.state.gameRunning = false;
+                
+                // Calculate final time
+                const time = this.state.currentTime;
+                const minutes = Math.floor(time / 60000);
+                const seconds = Math.floor((time % 60000) / 1000);
+                
+                document.getElementById('finalTime').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                document.getElementById('finalCoins').textContent = this.state.player.coins;
+                document.getElementById('finalScore').textContent = this.state.player.score.toLocaleString();
+                
+                // Generate final message based on performance
+                let message = "The tribe honors you!";
+                if (this.state.player.score > 5000) {
+                    message = "LEGENDARY WARRIOR!";
+                } else if (this.state.player.health > 50) {
+                    message = "The jungle bows to you.";
+                }
+                document.getElementById('finalMessage').textContent = message;
+                
+                setTimeout(() => {
+                    document.getElementById('reunionScene').style.display = 'flex';
+                }, 1000);
+            }
+            
+            gameOver() {
+                this.state.gameOver = true;
+                this.state.gameRunning = false;
+                
+                setTimeout(() => {
+                    document.getElementById('gameOverScreen').style.display = 'flex';
+                }, 1000);
+            }
+            
+            retryGame() {
+                document.getElementById('gameOverScreen').style.display = 'none';
+                this.state.gameOver = false;
+                this.state.gameRunning = true;
+                this.loadLevel(this.state.currentLevel);
+            }
+            
+            restartGame() {
+                document.getElementById('reunionScene').style.display = 'none';
+                this.startGame();
+            }
+            
+            returnToMenu() {
+                document.getElementById('gameOverScreen').style.display = 'none';
+                document.getElementById('reunionScene').style.display = 'none';
+                document.getElementById('titleScreen').style.display = 'flex';
+                this.state.gameRunning = false;
+                this.state.gameOver = false;
+                this.state.paused = false;
+            }
+            
+            togglePause() {
+                if (!this.state.gameRunning || this.state.gameOver) return;
+                this.state.paused = !this.state.paused;
+            }
+            
+            updateEnemies(deltaTime) {
+                const p = this.state.player;
+                const time = Date.now() * 0.001;
+                
+                for (const enemy of this.state.enemies) {
+                    // Update cooldowns
+                    if (enemy.attackCooldown > 0) enemy.attackCooldown -= deltaTime;
+                    if (enemy.jumpCooldown > 0) enemy.jumpCooldown -= deltaTime;
+                    if (enemy.shootCooldown > 0) enemy.shootCooldown -= deltaTime;
+                    
+                    const dx = p.x - enemy.x;
+                    const dy = p.y - enemy.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Different AI for different enemy types
+                    switch(enemy.type) {
+                        case 'snake':
+                            // Simple patrolling snakes
+                            enemy.x += enemy.speed * enemy.direction * deltaTime;
+                            
+                            // Turn around at edges or randomly
+                            if (enemy.x < 50 || enemy.x > this.CONFIG.LEVEL_WIDTH - 80 || Math.random() < 0.005) {
+                                enemy.direction *= -1;
+                            }
+                            
+                            // Attack if player is close
+                            if (distance < enemy.attackRange && enemy.attackCooldown <= 0) {
+                                enemy.attackCooldown = 120 + Math.random() * 60;
+                                this.createJungleEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2, 8, '#ff6b6b');
+                                
+                                // Create poison spit projectile
+                                if (Math.random() < 0.5 && distance > 30) {
+                                    this.state.projectiles.push({
+                                        x: enemy.x + enemy.width/2,
+                                        y: enemy.y + enemy.height/2,
+                                        vx: (dx / distance) * 4,
+                                        vy: (dy / distance) * 4,
+                                        width: 8,
+                                        height: 8,
+                                        damage: 8,
+                                        color: '#ff6b6b',
+                                        life: 120
+                                    });
+                                }
+                            }
+                            break;
+                            
+                        case 'jaguar':
+                            // Aggressive jaguars that chase and jump
+                            if (distance < 300) {
+                                enemy.x += Math.sign(dx) * enemy.speed * deltaTime;
+                                
+                                // Jump attack
+                                if (distance < 100 && enemy.jumpCooldown <= 0 && Math.abs(dy) > 30) {
+                                    enemy.velY = -12;
+                                    enemy.jumpCooldown = 180;
+                                }
+                                
+                                // Apply jump physics
+                                if (enemy.velY < 0) {
+                                    enemy.y += enemy.velY * deltaTime;
+                                    enemy.velY += this.CONFIG.GRAVITY * deltaTime;
+                                }
+                                
+                                // Claw attack
+                                if (distance < 50 && enemy.attackCooldown <= 0) {
+                                    enemy.attackCooldown = 90 + Math.random() * 60;
+                                    this.createSlashEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2, dx > 0);
+                                    this.screenShake(6);
+                                }
+                            }
+                            break;
+                            
+                        case 'guardian':
+                            // Temple guardians with multiple attacks
+                            if (distance < 400) {
+                                // Move towards player
+                                enemy.x += Math.sign(dx) * enemy.speed * deltaTime * 0.7;
+                                
+                                // Jump to reach player
+                                if (Math.abs(dy) > 50 && enemy.jumpCooldown <= 0) {
+                                    enemy.velY = -10;
+                                    enemy.jumpCooldown = 150;
+                                }
+                                
+                                // Apply jump physics
+                                if (enemy.velY < 0) {
+                                    enemy.y += enemy.velY * deltaTime;
+                                    enemy.velY += this.CONFIG.GRAVITY * deltaTime;
+                                }
+                                
+                                // Spear thrust attack
+                                if (distance < 70 && enemy.attackCooldown <= 0) {
+                                    enemy.attackCooldown = 100 + Math.random() * 80;
+                                    this.createSpearThrust(enemy.x + enemy.width/2, enemy.y + enemy.height/2, dx > 0);
+                                    this.screenShake(8);
+                                }
+                                
+                                // Shoot energy blast (only in level 3)
+                                if (this.state.currentLevel === 3 && enemy.canShoot && distance > 100 && distance < 250 && enemy.shootCooldown <= 0) {
+                                    enemy.shootCooldown = 180 + Math.random() * 120;
+                                    this.state.projectiles.push({
+                                        x: enemy.x + enemy.width/2,
+                                        y: enemy.y + enemy.height/2,
+                                        vx: (dx / distance) * 5,
+                                        vy: (dy / distance) * 5,
+                                        width: 12,
+                                        height: 12,
+                                        damage: 15,
+                                        color: '#ffd700',
+                                        life: 150,
+                                        homing: true
+                                    });
+                                }
+                            }
+                            break;
+                    }
+                    
+                    // Bounce off platforms
+                    for (const platform of this.state.platforms) {
+                        if (enemy.x < platform.x + platform.width &&
+                            enemy.x + enemy.width > platform.x &&
+                            enemy.y < platform.y + platform.height &&
+                            enemy.y + enemy.height > platform.y) {
+                            
+                            const overlapTop = (enemy.y + enemy.height) - platform.y;
+                            if (overlapTop > 0 && overlapTop < 20 && enemy.velY >= 0) {
+                                enemy.y = platform.y - enemy.height;
+                                enemy.velY = 0;
+                            }
+                        }
+                    }
+                    
+                    // Keep in bounds
+                    enemy.x = Math.max(50, Math.min(enemy.x, this.CONFIG.LEVEL_WIDTH - enemy.width - 50));
+                }
+            }
+            
+            updateProjectiles(deltaTime) {
+                const p = this.state.player;
+                
+                for (let i = this.state.projectiles.length - 1; i >= 0; i--) {
+                    const proj = this.state.projectiles[i];
+                    
+                    // Homing projectiles (guardian energy blasts)
+                    if (proj.homing) {
+                        const dx = p.x + p.width/2 - proj.x;
+                        const dy = p.y + p.height/2 - proj.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance > 0) {
+                            proj.vx += (dx / distance) * 0.2;
+                            proj.vy += (dy / distance) * 0.2;
+                            
+                            // Limit speed
+                            const speed = Math.sqrt(proj.vx * proj.vx + proj.vy * proj.vy);
+                            if (speed > 6) {
+                                proj.vx = (proj.vx / speed) * 6;
+                                proj.vy = (proj.vy / speed) * 6;
+                            }
+                        }
+                    }
+                    
+                    // Update position
+                    proj.x += proj.vx * deltaTime;
+                    proj.y += proj.vy * deltaTime;
+                    proj.life -= deltaTime;
+                    
+                    // Check collision with player
+                    if (!p.invulnerable && !p.isBlocking &&
+                        proj.x < p.x + p.width &&
+                        proj.x + proj.width > p.x &&
+                        proj.y < p.y + p.height &&
+                        proj.y + proj.height > p.y) {
+                        
+                        p.health -= proj.damage;
+                        p.invulnerable = true;
+                        p.invulnerableTime = 20;
+                        p.combo = 0;
+                        p.multiplier = 1.0;
+                        
+                        this.createJungleEffect(p.x + p.width/2, p.y + p.height/2, 10, proj.color);
+                        this.showDamageNumber(p.x, p.y, proj.damage);
+                        this.screenShake(10);
+                        
+                        // Remove projectile
+                        this.state.projectiles.splice(i, 1);
+                        
+                        if (p.health <= 0) {
+                            p.health = 0;
+                            this.gameOver();
+                        }
+                        continue;
+                    }
+                    
+                    // Remove old projectiles
+                    if (proj.life <= 0 || 
+                        proj.x < -100 || 
+                        proj.x > this.CONFIG.LEVEL_WIDTH + 100 ||
+                        proj.y < -100 || 
+                        proj.y > this.CONFIG.HEIGHT + 100) {
+                        this.state.projectiles.splice(i, 1);
+                    }
+                }
+            }
+            
+            updateComboDisplay() {
+                const p = this.state.player;
+                if (p.combo > 0) {
+                    document.getElementById('comboDisplay').style.display = 'block';
+                    document.getElementById('comboDisplay').innerHTML = 
+                        `COMBO: x${p.combo} (${p.multiplier.toFixed(1)}x DMG)`;
+                } else {
+                    document.getElementById('comboDisplay').style.display = 'none';
+                }
+            }
+            
+            updateCamera() {
+                const p = this.state.player;
+                
+                // In level 3, camera focuses ahead when returning with statue
+                let targetX = p.x + p.width/2 - this.CONFIG.WIDTH/2;
+                
+                if (this.state.currentLevel === 3 && this.state.returningWithStatue) {
+                    // Look ahead towards the den
+                    targetX = Math.min(p.x + 200, this.state.den.x + 100) - this.CONFIG.WIDTH/2;
+                }
+                
+                // Smooth follow
+                this.state.cameraX += (targetX - this.state.cameraX) * 0.1;
+                this.state.cameraY = 0; // Fixed vertical position
+                
+                // Clamp
+                this.state.cameraX = Math.max(0, Math.min(
+                    this.state.cameraX, 
+                    this.CONFIG.LEVEL_WIDTH - this.CONFIG.WIDTH
+                ));
+                
+                // Apply screen shake
+                if (this.state.screenShake > 0) {
+                    this.state.cameraX += (Math.random() - 0.5) * this.state.screenShake * 2;
+                }
+            }
+            
+            screenShake(intensity) {
+                this.state.screenShake = Math.max(this.state.screenShake, intensity);
+            }
+            
+            createJungleEffect(x, y, count, color) {
+                for (let i = 0; i < count; i++) {
+                    this.state.particles.push({
+                        x, y,
+                        vx: (Math.random() - 0.5) * 5,
+                        vy: (Math.random() - 0.5) * 5 - 2,
+                        life: 15 + Math.random() * 15,
+                        size: 2 + Math.random() * 3,
+                        color,
+                        gravity: 0.1
+                    });
+                }
+            }
+            
+            createSlashEffect(x, y, facingRight) {
+                for (let i = 0; i < 10; i++) {
+                    const angle = (facingRight ? 45 : 135) * (Math.PI/180) + (Math.random() - 0.5) * 0.3;
+                    const speed = 3 + Math.random() * 2;
+                    
+                    this.state.particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 12 + Math.random() * 8,
+                        size: 2 + Math.random() * 2,
+                        color: '#4aaf7a',
+                        gravity: 0.15
+                    });
+                }
+            }
+            
+            createHitEffect(x, y, enemyType) {
+                const colors = {
+                    'snake': '#ff6b6b',
+                    'jaguar': '#ff9a76',
+                    'guardian': '#ffd700'
+                };
+                
+                for (let i = 0; i < 8; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * 2;
+                    
+                    this.state.particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 15 + Math.random() * 10,
+                        size: 2 + Math.random() * 3,
+                        color: colors[enemyType] || '#ff6b6b',
+                        gravity: 0.08
+                    });
+                }
+            }
+            
+            createShieldEffect(x, y) {
+                for (let i = 0; i < 12; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = 25 + Math.random() * 15;
+                    
+                    this.state.particles.push({
+                        x: x + Math.cos(angle) * radius,
+                        y: y + Math.sin(angle) * radius,
+                        vx: -Math.cos(angle) * 1.5,
+                        vy: -Math.sin(angle) * 1.5,
+                        life: 15 + Math.random() * 10,
+                        size: 2 + Math.random() * 2,
+                        color: '#4aaf7a',
+                        gravity: 0
+                    });
+                }
+            }
+            
+            createSpearThrust(x, y, facingRight) {
+                for (let i = 0; i < 15; i++) {
+                    const angle = (facingRight ? 0 : 180) * (Math.PI/180) + (Math.random() - 0.5) * 0.2;
+                    const speed = 4 + Math.random() * 3;
+                    
+                    this.state.particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed + (Math.random() - 0.5) * 2,
+                        life: 20 + Math.random() * 10,
+                        size: 3 + Math.random() * 2,
+                        color: '#ffd700',
+                        gravity: 0.1
+                    });
+                }
+            }
+            
+            showDamageNumber(x, y, damage) {
+                const damageEl = document.createElement('div');
+                damageEl.className = 'floating-notification';
+                damageEl.textContent = `-${damage}`;
+                damageEl.style.color = '#ff6b6b';
+                damageEl.style.left = `${x - this.state.cameraX}px`;
+                damageEl.style.top = `${y - this.state.cameraY}px`;
+                document.getElementById('gameContainer').appendChild(damageEl);
+                
+                setTimeout(() => damageEl.remove(), 800);
+            }
+            
+            showFloatingText(x, y, text, color) {
+                const textEl = document.createElement('div');
+                textEl.className = 'floating-notification';
+                textEl.textContent = text;
+                textEl.style.color = color;
+                textEl.style.fontSize = '14px';
+                textEl.style.left = `${x - this.state.cameraX}px`;
+                textEl.style.top = `${y - this.state.cameraY}px`;
+                document.getElementById('gameContainer').appendChild(textEl);
+                
+                setTimeout(() => textEl.remove(), 1200);
+            }
+            
+            checkCollisions() {
+                const p = this.state.player;
+                
+                // Coin collection
+                for (let i = this.state.coins.length - 1; i >= 0; i--) {
+                    const coin = this.state.coins[i];
+                    
+                    if (!coin.collected &&
+                        p.x < coin.x + 12 &&
+                        p.x + p.width > coin.x &&
+                        p.y < coin.y + 12 &&
+                        p.y + p.height > coin.y) {
+                        
+                        coin.collected = true;
+                        p.coins += 1;
+                        p.score += coin.value;
+                        
+                        this.createJungleEffect(coin.x + 6, coin.y + 6, 6, '#ffd700');
+                        this.showFloatingText(coin.x, coin.y, `+${coin.value}`, '#ffd700');
+                    }
+                }
+                
+                // Enemy collision
+                if (!p.invulnerable) {
+                    for (const enemy of this.state.enemies) {
+                        if (p.x < enemy.x + enemy.width &&
+                            p.x + p.width > enemy.x &&
+                            p.y < enemy.y + enemy.height &&
+                            p.y + p.height > enemy.y) {
+                            
+                            let damage = enemy.damage;
+                            if (p.isBlocking) {
+                                damage = Math.floor(damage * 0.3);
+                                this.createShieldEffect(p.x + p.width/2, p.y + p.height/2);
+                            }
+                            
+                            p.health -= damage;
+                            p.invulnerable = true;
+                            p.invulnerableTime = 25;
+                            p.combo = 0;
+                            p.multiplier = 1.0;
+                            
+                            this.createJungleEffect(p.x + p.width/2, p.y + p.height/2, 12, '#ff6b6b');
+                            this.showDamageNumber(p.x, p.y, damage);
+                            this.screenShake(12);
+                            
+                            // Knockback
+                            p.velX = p.x < enemy.x ? -6 : 6;
+                            p.velY = -4;
+                            
+                            if (p.health <= 0) {
+                                p.health = 0;
+                                this.gameOver();
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            checkLevelCompletion() {
+                // Check if all enemies are defeated
+                if (this.state.enemies.length === 0 && this.state.levelEnd) {
+                    this.state.levelEnd.active = true;
+                    
+                    // Show hint
+                    if (!this.state.levelComplete) {
+                        this.showFloatingText(
+                            this.state.levelEnd.x + this.state.levelEnd.width/2,
+                            this.state.levelEnd.y - 40,
+                            "ENTER TEMPLE",
+                            '#4aaf7a'
+                        );
+                    }
+                }
+                
+                // Level 3: Show den hint when carrying statue
+                if (this.state.currentLevel === 3 && this.state.player.hasStatue && this.state.den) {
+                    this.showFloatingText(
+                        this.state.den.x + this.state.den.width/2,
+                        this.state.den.y - 60,
+                        "RETURN TO DEN!",
+                        '#ffd700'
+                    );
+                }
+            }
+            
+            updateParticles(deltaTime) {
+                for (let i = this.state.particles.length - 1; i >= 0; i--) {
+                    const p = this.state.particles[i];
+                    
+                    p.x += p.vx * deltaTime;
+                    p.y += p.vy * deltaTime;
+                    p.vy += p.gravity * deltaTime;
+                    p.life -= deltaTime;
+                    
+                    if (p.life <= 0) {
+                        this.state.particles.splice(i, 1);
+                    }
+                }
+            }
+            
+            render() {
+                // Clear with jungle gradient
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.CONFIG.HEIGHT);
+                gradient.addColorStop(0, '#001a00');
+                gradient.addColorStop(0.5, '#003300');
+                gradient.addColorStop(1, '#001100');
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.CONFIG.WIDTH, this.CONFIG.HEIGHT);
+                
+                // Draw moon and stars
+                this.drawNightSky();
+                
+                // Apply camera transform
+                this.ctx.save();
+                this.ctx.translate(-Math.floor(this.state.cameraX), 0);
+                
+                // Draw jungle background
+                this.drawJungleBackground();
+                
+                // Draw torches
+                this.drawTorches();
+                
+                // Draw vines
+                this.drawVines();
+                
+                // Draw game world
+                this.drawPlatforms();
+                this.drawCoins();
+                this.drawEnemies();
+                this.drawProjectiles();
+                this.drawPlayer();
+                this.drawParticles();
+                this.drawLevelElements();
+                
+                this.ctx.restore();
+            }
+            
+            drawNightSky() {
+                // Moon
+                this.ctx.fillStyle = '#e6e6e6';
+                this.ctx.beginPath();
+                this.ctx.arc(850, 80, 40, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Moon glow
+                this.ctx.globalAlpha = 0.3;
+                this.ctx.beginPath();
+                this.ctx.arc(850, 80, 60, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.globalAlpha = 1.0;
+                
+                // Stars
+                const time = Date.now() * 0.001;
+                for (let i = 0; i < 100; i++) {
+                    const x = (i * 31) % this.CONFIG.WIDTH;
+                    const y = 20 + (i * 17) % 150;
+                    const brightness = 0.3 + 0.3 * Math.sin(time + i);
+                    
+                    this.ctx.fillStyle = `rgba(255, 255, 255, ${brightness})`;
+                    this.ctx.fillRect(x, y, 1, 1);
+                }
+            }
+            
+            drawJungleBackground() {
+                // Distant trees
+                for (let i = 0; i < 20; i++) {
+                    const x = (i * 150 + this.state.cameraX * 0.3) % (this.CONFIG.LEVEL_WIDTH + 300) - 150;
+                    const height = 80 + Math.sin(i * 2.3) * 20;
+                    
+                    this.ctx.fillStyle = '#002200';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 200);
+                    this.ctx.lineTo(x + 40, 200);
+                    this.ctx.lineTo(x + 20, 200 - height);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                }
+                
+                // Midground trees
+                for (let i = 0; i < 15; i++) {
+                    const x = (i * 200 + this.state.cameraX * 0.5) % (this.CONFIG.LEVEL_WIDTH + 400) - 200;
+                    const height = 120 + Math.cos(i * 1.7) * 30;
+                    
+                    this.ctx.fillStyle = '#003300';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 250);
+                    this.ctx.lineTo(x + 60, 250);
+                    this.ctx.lineTo(x + 30, 250 - height);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                }
+            }
+            
+            drawTorches() {
+                const time = Date.now() * 0.001;
+                
+                for (const torch of this.torches) {
+                    const x = torch.x - this.state.cameraX;
+                    if (x < -50 || x > this.CONFIG.WIDTH + 50) continue;
+                    
+                    const flicker = 0.7 + 0.3 * Math.sin(time * 5 + torch.flicker);
+                    
+                    // Torch flame
+                    this.ctx.fillStyle = `rgba(255, ${100 + Math.floor(155 * flicker)}, 0, ${0.8 * flicker})`;
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, torch.y - 10, 8 + 3 * flicker, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Torch stick
+                    this.ctx.fillStyle = '#8b4513';
+                    this.ctx.fillRect(x - 3, torch.y - 10, 6, 20);
+                    
+                    // Glow
+                    this.ctx.globalAlpha = 0.2 * flicker;
+                    this.ctx.fillStyle = '#ffa500';
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, torch.y - 10, 20, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.globalAlpha = 1.0;
+                }
+            }
+            
+            drawVines() {
+                const time = Date.now() * 0.001;
+                
+                for (const vine of this.vines) {
+                    const x = vine.x - this.state.cameraX;
+                    if (x < -20 || x > this.CONFIG.WIDTH + 20) continue;
+                    
+                    const swing = Math.sin(time * 0.5 + vine.swing) * 0.2;
+                    
+                    this.ctx.strokeStyle = '#2a553a';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, vine.y);
+                    this.ctx.bezierCurveTo(
+                        x + 10 * swing, vine.y + vine.length * 0.3,
+                        x + 15 * swing, vine.y + vine.length * 0.7,
+                        x + 20 * swing, vine.y + vine.length
+                    );
+                    this.ctx.stroke();
+                    
+                    // Vine leaves
+                    this.ctx.fillStyle = '#4aaf7a';
+                    this.ctx.beginPath();
+                    this.ctx.arc(x + 20 * swing, vine.y + vine.length, 8, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            }
+            
+            drawPlatforms() {
+                for (const platform of this.state.platforms) {
+                    // Platform base
+                    this.ctx.fillStyle = platform.color;
+                    this.ctx.fillRect(
+                        Math.floor(platform.x),
+                        Math.floor(platform.y),
+                        Math.floor(platform.width),
+                        Math.floor(platform.height)
+                    );
+                    
+                    // Platform moss/edges
+                    this.ctx.fillStyle = platform.color === '#2a553a' ? '#1a452a' : '#2a654a';
+                    this.ctx.fillRect(
+                        Math.floor(platform.x),
+                        Math.floor(platform.y),
+                        Math.floor(platform.width),
+                        4
+                    );
+                    
+                    // Platform glow for moving platforms
+                    if (platform.moving) {
+                        this.ctx.strokeStyle = '#4aaf7a';
+                        this.ctx.lineWidth = 2;
+                        this.ctx.strokeRect(
+                            Math.floor(platform.x),
+                            Math.floor(platform.y),
+                            Math.floor(platform.width),
+                            Math.floor(platform.height)
+                        );
+                    }
+                }
+            }
+            
+            drawCoins() {
+                const time = Date.now() * 0.001;
+                
+                for (const coin of this.state.coins) {
+                    if (coin.collected) continue;
+                    
+                    const floatY = coin.y + Math.sin(time * 3 + coin.x * 0.01) * 4;
+                    
+                    // Coin glow
+                    this.ctx.shadowColor = '#ffd700';
+                    this.ctx.shadowBlur = 15;
+                    
+                    // Coin body
+                    this.ctx.fillStyle = '#ffd700';
+                    this.ctx.beginPath();
+                    this.ctx.arc(coin.x + 6, floatY + 6, 6, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Coin shine
+                    this.ctx.fillStyle = '#ffffa0';
+                    this.ctx.beginPath();
+                    this.ctx.arc(coin.x + 3, floatY + 3, 2, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    this.ctx.shadowBlur = 0;
+                }
+            }
+            
+            drawEnemies() {
+                for (const enemy of this.state.enemies) {
+                    // Enemy body
+                    switch(enemy.type) {
+                        case 'snake':
+                            this.ctx.fillStyle = '#ff6b6b';
+                            this.ctx.fillRect(
+                                Math.floor(enemy.x),
+                                Math.floor(enemy.y),
+                                Math.floor(enemy.width),
+                                Math.floor(enemy.height)
+                            );
+                            
+                            // Snake head
+                            this.ctx.fillStyle = '#ff3333';
+                            this.ctx.beginPath();
+                            this.ctx.arc(
+                                enemy.x + (enemy.direction > 0 ? enemy.width - 8 : 8),
+                                enemy.y + enemy.height/2,
+                                6,
+                                0,
+                                Math.PI * 2
+                            );
+                            this.ctx.fill();
+                            
+                            // Snake eyes
+                            this.ctx.fillStyle = '#ffffff';
+                            this.ctx.fillRect(
+                                Math.floor(enemy.x + (enemy.direction > 0 ? enemy.width - 12 : 4)),
+                                Math.floor(enemy.y + 6),
+                                2,
+                                2
+                            );
+                            break;
+                            
+                        case 'jaguar':
+                            this.ctx.fillStyle = '#ff9a76';
+                            this.ctx.fillRect(
+                                Math.floor(enemy.x),
+                                Math.floor(enemy.y),
+                                Math.floor(enemy.width),
+                                Math.floor(enemy.height)
+                            );
+                            
+                            // Jaguar spots
+                            this.ctx.fillStyle = '#8b4513';
+                            for (let i = 0; i < 4; i++) {
+                                this.ctx.beginPath();
+                                this.ctx.arc(
+                                    enemy.x + 8 + i * 8,
+                                    enemy.y + 8 + (i % 2) * 8,
+                                    3,
+                                    0,
+                                    Math.PI * 2
+                                );
+                                this.ctx.fill();
+                            }
+                            
+                            // Jaguar eyes
+                            this.ctx.fillStyle = '#ff3333';
+                            this.ctx.fillRect(
+                                Math.floor(enemy.x + enemy.width/2 - 6),
+                                Math.floor(enemy.y + 8),
+                                4,
+                                4
+                            );
+                            this.ctx.fillRect(
+                                Math.floor(enemy.x + enemy.width/2 + 2),
+                                Math.floor(enemy.y + 8),
+                                4,
+                                4
+                            );
+                            break;
+                            
+                        case 'guardian':
+                            this.ctx.fillStyle = '#ffd700';
+                            this.ctx.fillRect(
+                                Math.floor(enemy.x),
+                                Math.floor(enemy.y),
+                                Math.floor(enemy.width),
+                                Math.floor(enemy.height)
+                            );
+                            
+                            // Guardian armor details
+                            this.ctx.fillStyle = '#b8860b';
+                            this.ctx.fillRect(
+                                Math.floor(enemy.x),
+                                Math.floor(enemy.y),
+                                Math.floor(enemy.width),
+                                6
+                            );
+                            this.ctx.fillRect(
+                                Math.floor(enemy.x),
+                                Math.floor(enemy.y + enemy.height - 6),
+                                Math.floor(enemy.width),
+                                6
+                            );
+                            
+                            // Guardian eye
+                            this.ctx.fillStyle = '#00ffff';
+                            this.ctx.beginPath();
+                                this.ctx.arc(
+                                enemy.x + enemy.width/2,
+                                enemy.y + enemy.height/2,
+                                5,
+                                0,
+                                Math.PI * 2
+                            );
+                            this.ctx.fill();
+                            break;
+                    }
+                    
+                    // Health bar
+                    const maxHealth = enemy.type === 'snake' ? 25 : 
+                                    enemy.type === 'jaguar' ? 35 : 50;
+                    const healthPercent = enemy.health / maxHealth;
+                    
+                    if (healthPercent < 1) {
+                        this.ctx.fillStyle = '#ff6b6b';
+                        this.ctx.fillRect(
+                            Math.floor(enemy.x),
+                            Math.floor(enemy.y - 8),
+                            Math.floor(enemy.width * healthPercent),
+                            4
+                        );
+                        
+                        this.ctx.strokeStyle = '#ffffff';
+                        this.ctx.strokeRect(
+                            Math.floor(enemy.x),
+                            Math.floor(enemy.y - 8),
+                            Math.floor(enemy.width),
+                            4
+                        );
+                    }
+                }
+            }
+            
+            drawProjectiles() {
+                for (const proj of this.state.projectiles) {
+                    // Projectile body
+                    this.ctx.fillStyle = proj.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(proj.x, proj.y, proj.width/2, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Projectile glow
+                    this.ctx.globalAlpha = 0.5;
+                    this.ctx.beginPath();
+                    this.ctx.arc(proj.x, proj.y, proj.width, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.globalAlpha = 1.0;
+                }
+            }
+            
+            drawPlayer() {
+                const p = this.state.player;
+                
+                if (p.invulnerable && Math.floor(Date.now() / 100) % 2 === 0) {
+                    return; // Flash effect
+                }
+                
+                // Draw shadow
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                this.ctx.beginPath();
+                this.ctx.ellipse(
+                    Math.floor(p.x + p.width/2),
+                    Math.floor(p.y + p.height + 4),
+                    p.width/2 * 0.7,
+                    6,
+                    0,
+                    0,
+                    Math.PI * 2
+                );
+                this.ctx.fill();
+                
+                // Player body (tribal warrior)
+                this.ctx.fillStyle = '#4aaf7a';
+                this.ctx.fillRect(
+                    Math.floor(p.x),
+                    Math.floor(p.y),
+                    Math.floor(p.width),
+                    Math.floor(p.height)
+                );
+                
+                // Warrior details
+                this.ctx.fillStyle = '#2a553a';
+                this.ctx.fillRect(
+                    Math.floor(p.x + 4),
+                    Math.floor(p.y + 4),
+                    Math.floor(p.width - 8),
+                    8
+                ); // Headband
+                
+                this.ctx.fillRect(
+                    Math.floor(p.x + 4),
+                    Math.floor(p.y + p.height - 12),
+                    Math.floor(p.width - 8),
+                    8
+                ); // Leg wraps
+                
+                // Spear when attacking
+                if (p.isAttacking) {
+                    const spearX = p.x + (p.facingRight ? p.width + 5 : -15);
+                    const spearY = p.y + 15;
+                    
+                    this.ctx.strokeStyle = '#8b4513';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(spearX, spearY);
+                    this.ctx.lineTo(spearX + (p.facingRight ? 20 : -20), spearY);
+                    this.ctx.stroke();
+                    
+                    this.ctx.fillStyle = '#ff6b6b';
+                    this.ctx.beginPath();
+                    this.ctx.arc(
+                        spearX + (p.facingRight ? 22 : -22),
+                        spearY,
+                        4,
+                        0,
+                        Math.PI * 2
+                    );
+                    this.ctx.fill();
+                }
+                
+                // Carrying statue (level 3)
+                if (p.hasStatue) {
+                    this.ctx.fillStyle = '#ffd700';
+                    this.ctx.fillRect(
+                        Math.floor(p.x + p.width/2 - 8),
+                        Math.floor(p.y - 15),
+                        16,
+                        20
+                    );
+                    
+                    // Statue glow
+                    this.ctx.globalAlpha = 0.3;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x + p.width/2, p.y - 5, 15, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.globalAlpha = 1.0;
+                }
+                
+                // Blocking effect
+                if (p.isBlocking) {
+                    this.ctx.strokeStyle = '#4aaf7a';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.globalAlpha = 0.3;
+                    this.ctx.beginPath();
+                    this.ctx.arc(
+                        Math.floor(p.x + p.width/2),
+                        Math.floor(p.y + p.height/2),
+                        p.width + 8,
+                        0,
+                        Math.PI * 2
+                    );
+                    this.ctx.stroke();
+                    this.ctx.globalAlpha = 1.0;
+                }
+            }
+            
+            drawLevelElements() {
+                // Draw level end (temples for levels 1-2)
+                if (this.state.levelEnd) {
+                    const end = this.state.levelEnd;
+                    
+                    if (end.active) {
+                        // Active temple entrance
+                        this.ctx.fillStyle = '#8b4513';
+                        this.ctx.fillRect(
+                            Math.floor(end.x),
+                            Math.floor(end.y),
+                            Math.floor(end.width),
+                            Math.floor(end.height)
+                        );
+                        
+                        // Temple details
+                        this.ctx.fillStyle = '#ffd700';
+                        this.ctx.fillRect(
+                            Math.floor(end.x + end.width/2 - 10),
+                            Math.floor(end.y + 20),
+                            20,
+                            30
+                        );
+                        
+                        // Glowing entrance
+                        this.ctx.globalAlpha = 0.5;
+                        this.ctx.fillStyle = '#4aaf7a';
+                        this.ctx.fillRect(
+                            Math.floor(end.x + 10),
+                            Math.floor(end.y + 60),
+                            Math.floor(end.width - 20),
+                            20
+                        );
+                        this.ctx.globalAlpha = 1.0;
+                    } else {
+                        // Inactive temple
+                        this.ctx.fillStyle = '#654321';
+                        this.ctx.fillRect(
+                            Math.floor(end.x),
+                            Math.floor(end.y),
+                            Math.floor(end.width),
+                            Math.floor(end.height)
+                        );
+                    }
+                }
+                
+                // Draw statue (level 3)
+                if (this.state.currentLevel === 3 && this.state.statue && !this.state.statue.collected) {
+                    const statue = this.state.statue;
+                    
+                    // Golden statue
+                    this.ctx.fillStyle = '#ffd700';
+                    this.ctx.fillRect(
+                        Math.floor(statue.x),
+                        Math.floor(statue.y),
+                        Math.floor(statue.width),
+                        Math.floor(statue.height)
+                    );
+                    
+                    // Statue details
+                    this.ctx.fillStyle = '#b8860b';
+                    this.ctx.fillRect(
+                        Math.floor(statue.x),
+                        Math.floor(statue.y),
+                        Math.floor(statue.width),
+                        4
+                    );
+                    this.ctx.fillRect(
+                        Math.floor(statue.x),
+                        Math.floor(statue.y + statue.height - 4),
+                        Math.floor(statue.width),
+                        4
+                    );
+                    
+                    // Statue glow
+                    this.ctx.globalAlpha = 0.4;
+                    this.ctx.shadowColor = '#ffd700';
+                    this.ctx.shadowBlur = 20;
+                    this.ctx.fillRect(
+                        Math.floor(statue.x - 5),
+                        Math.floor(statue.y - 5),
+                        Math.floor(statue.width + 10),
+                        Math.floor(statue.height + 10)
+                    );
+                    this.ctx.shadowBlur = 0;
+                    this.ctx.globalAlpha = 1.0;
+                }
+                
+                // Draw den (level 3)
+                if (this.state.currentLevel === 3 && this.state.den) {
+                    const den = this.state.den;
+                    
+                    // Den structure
+                    this.ctx.fillStyle = '#8b4513';
+                    this.ctx.fillRect(
+                        Math.floor(den.x),
+                        Math.floor(den.y),
+                        Math.floor(den.width),
+                        Math.floor(den.height)
+                    );
+                    
+                    // Den entrance
+                    this.ctx.fillStyle = '#4a2c1a';
+                    this.ctx.fillRect(
+                        Math.floor(den.x + den.width/2 - 15),
+                        Math.floor(den.y + den.height - 30),
+                        30,
+                        30
+                    );
+                    
+                    // Tribal markings
+                    this.ctx.fillStyle = '#4aaf7a';
+                    this.ctx.fillRect(den.x + 10, den.y + 10, 4, 20);
+                    this.ctx.fillRect(den.x + den.width - 14, den.y + 10, 4, 20);
+                    this.ctx.fillRect(den.x + den.width/2 - 2, den.y + 5, 4, 10);
+                }
+            }
+            
+            drawParticles() {
+                for (const p of this.state.particles) {
+                    this.ctx.globalAlpha = p.life / 30;
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.fillRect(
+                        Math.floor(p.x - p.size/2),
+                        Math.floor(p.y - p.size/2),
+                        Math.floor(p.size),
+                        Math.floor(p.size)
+                    );
+                }
+                this.ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // =============== START GAME ===============
+        window.addEventListener('load', () => {
+            const game = new MidnightJungle();
+            window.game = game;
+            
+            // Auto-start for demo
+            setTimeout(() => {
+                if (document.getElementById('loadingScreen').style.display !== 'none') {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.getElementById('titleScreen').style.display = 'flex';
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
