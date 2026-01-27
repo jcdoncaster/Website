@@ -850,14 +850,14 @@
                 const levelIntros = [
                     [
                         "LEVEL 1: DARK CANOPY",
-                        "The jungle is thick and dangerous.",
-                        "Watch for venomous snakes in the trees.",
-                        "Collect jungle gems to earn honor.",
+                        "Defeat all the snakes to unlock the temple!",
+                        "Collect jungle gems for extra honor.",
+                        "Walk into the glowing temple entrance.",
                         "",
                         "CONTROLS:",
                         "← → : Move | SPACE : Jump",
                         "Z : Attack | X : Block",
-                        "ENTER : Interact | ESC : Menu"
+                        "ENTER : Use/Interact | ESC : Menu"
                     ],
                     [
                         "LEVEL 2: TEMPLE RUINS",
@@ -865,14 +865,14 @@
                         "Jaguars prowl these sacred grounds.",
                         "Stay alert - they hunt in packs.",
                         "",
-                        "Defeat all enemies to unlock",
+                        "Defeat all jaguars to unlock",
                         "the temple entrance."
                     ],
                     [
                         "LEVEL 3: GOLDEN SANCTUM",
                         "The final temple holds our salvation.",
                         "Temple guardians defend the Golden Idol.",
-                        "Retrieve the idol and return to our den!"
+                        "Retrieve the idol and return to your den!"
                     ]
                 ];
                 
@@ -1383,23 +1383,11 @@
                         return;
                     }
                 }
-                
-                // Check if at level end (levels 1-2)
-                if (this.state.levelEnd && this.state.levelEnd.active) {
-                    const p = this.state.player;
-                    const end = this.state.levelEnd;
-                    const distance = Math.sqrt(
-                        Math.pow(p.x + p.width/2 - (end.x + end.width/2), 2) +
-                        Math.pow(p.y + p.height/2 - (end.y + end.height/2), 2)
-                    );
-                    
-                    if (distance < 80) {
-                        this.completeLevel();
-                    }
-                }
             }
             
             completeLevel() {
+                if (this.state.levelComplete) return; // Prevent multiple triggers
+                
                 this.state.levelComplete = true;
                 
                 if (this.state.currentLevel < 3) {
@@ -1410,6 +1398,7 @@
                     ]);
                     
                     setTimeout(() => {
+                        this.state.levelComplete = false;
                         this.state.currentLevel++;
                         this.loadLevel(this.state.currentLevel);
                     }, 1500);
@@ -1900,18 +1889,30 @@
                         }
                     }
                 }
+                
+                // Level end collision (AUTOMATIC - no need to press ENTER)
+                if (this.state.levelEnd && this.state.levelEnd.active && !this.state.levelComplete) {
+                    const end = this.state.levelEnd;
+                    if (p.x < end.x + end.width &&
+                        p.x + p.width > end.x &&
+                        p.y < end.y + end.height &&
+                        p.y + p.height > end.y) {
+                        
+                        this.completeLevel();
+                    }
+                }
             }
             
             checkLevelCompletion() {
                 // Check if all enemies are defeated
-                if (this.state.enemies.length === 0 && this.state.levelEnd && !this.state.levelComplete) {
+                if (this.state.enemies.length === 0 && this.state.levelEnd && !this.state.levelEnd.active) {
                     this.state.levelEnd.active = true;
                     
                     // Show hint
                     this.showFloatingText(
                         this.state.levelEnd.x + this.state.levelEnd.width/2,
                         this.state.levelEnd.y - 40,
-                        "ENTER TEMPLE",
+                        "TEMPLE UNLOCKED!",
                         '#4aaf7a'
                     );
                 }
