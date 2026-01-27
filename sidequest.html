@@ -2,9 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHRONO QUEST: MIDNIGHT JUNGLE</title>
     <style>
         /* =============== MIDNIGHT JUNGLE STYLES =============== */
@@ -12,24 +10,14 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            touch-action: manipulation;
-            background: #000;
         }
 
         body {
             background: #000;
             font-family: 'Courier New', monospace;
             color: #fff;
+            overflow: hidden;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -38,92 +26,11 @@
             image-rendering: crisp-edges;
         }
 
-        /* Fullscreen styles */
-        :fullscreen {
-            background: #000;
-        }
-
-        :-webkit-full-screen {
-            background: #000;
-        }
-
-        :-moz-full-screen {
-            background: #000;
-        }
-
-        /* Mobile Orientation Warning */
-        #orientationWarning {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #001100;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 3000;
-            text-align: center;
-            padding: 20px;
-        }
-
-        #orientationWarning h2 {
-            color: #4aaf7a;
-            font-size: 24px;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
-        }
-
-        #orientationWarning p {
-            color: #aaffaa;
-            font-size: 16px;
-            margin-bottom: 30px;
-            line-height: 1.5;
-        }
-
-        #orientationWarning .rotate-icon {
-            font-size: 60px;
-            margin: 20px 0;
-            animation: rotatePhone 2s ease-in-out infinite;
-        }
-
-        @keyframes rotatePhone {
-            0%, 100% { transform: rotate(0deg); }
-            50% { transform: rotate(90deg); }
-        }
-
-        /* Fullscreen button */
-        #fullscreenBtn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 30, 15, 0.7);
-            border: 2px solid #4aaf7a;
-            color: #aaffaa;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20px;
-            cursor: pointer;
-            z-index: 101;
-            transition: all 0.2s ease;
-        }
-
-        #fullscreenBtn:hover {
-            background: rgba(74, 175, 122, 0.7);
-        }
-
         /* Game Container */
         #gameContainer {
             position: relative;
             width: 1024px;
             height: 576px;
-            max-width: 100vw;
-            max-height: 100vh;
             border: none;
             overflow: hidden;
             background: #001100;
@@ -133,40 +40,9 @@
             border-radius: 4px;
         }
 
-        @media (max-width: 1024px) and (orientation: landscape) {
-            #gameContainer {
-                width: 100vw;
-                height: 100vh;
-                max-width: none;
-                max-height: none;
-                border-radius: 0;
-                box-shadow: none;
-            }
-            
-            canvas {
-                width: 100% !important;
-                height: 100% !important;
-            }
-            
-            #fullscreenBtn {
-                display: none;
-            }
-        }
-
-        @media (orientation: portrait) {
-            #gameContainer {
-                display: none;
-            }
-            #orientationWarning {
-                display: flex;
-            }
-        }
-
         canvas {
             display: block;
             image-rendering: pixelated;
-            width: 100%;
-            height: 100%;
         }
 
         /* Jungle UI */
@@ -186,32 +62,6 @@
                 0 0 10px rgba(0, 255, 100, 0.2),
                 inset 0 0 10px rgba(0, 255, 100, 0.1);
             border-radius: 4px;
-        }
-
-        @media (max-width: 1024px) and (orientation: landscape) {
-            .jungle-panel {
-                padding: 8px 12px;
-                font-size: 11px;
-                border-width: 1px;
-            }
-            
-            #healthPanel {
-                width: 180px !important;
-                top: 10px !important;
-                left: 10px !important;
-            }
-            
-            #weaponPanel {
-                width: 140px !important;
-                top: 10px !important;
-                right: 10px !important;
-            }
-            
-            #levelPanel {
-                top: 10px !important;
-                padding: 6px 10px !important;
-                font-size: 10px !important;
-            }
         }
 
         #healthPanel {
@@ -236,7 +86,6 @@
             text-align: center;
             background: rgba(20, 40, 20, 0.9);
             border-color: #ffd700;
-            padding: 8px 15px;
         }
 
         /* Jungle Bars */
@@ -249,13 +98,6 @@
             overflow: hidden;
             border: 1px solid #2a553a;
             border-radius: 2px;
-        }
-
-        @media (max-width: 1024px) and (orientation: landscape) {
-            .jungle-bar {
-                height: 15px;
-                margin-top: 6px;
-            }
         }
 
         .health-fill {
@@ -305,28 +147,6 @@
             border-radius: 6px;
         }
 
-        @media (max-width: 1024px) and (orientation: landscape) {
-            #dialogueBox {
-                width: 90vw;
-                bottom: 140px;
-                padding: 15px;
-                min-height: 120px;
-            }
-            
-            #dialogueText {
-                font-size: 12px !important;
-                line-height: 1.4 !important;
-                margin-bottom: 15px !important;
-            }
-            
-            #continueBtn {
-                padding: 6px 16px !important;
-                font-size: 10px !important;
-                bottom: 15px !important;
-                right: 15px !important;
-            }
-        }
-
         #dialogueText {
             font-size: 14px;
             line-height: 1.6;
@@ -374,24 +194,6 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-        }
-
-        @media (max-width: 1024px) and (orientation: landscape) {
-            #gameTitle {
-                font-size: 36px !important;
-                margin-bottom: 5px !important;
-            }
-            
-            #titleScreen p {
-                font-size: 14px !important;
-                margin-bottom: 20px !important;
-            }
-            
-            .menu-btn {
-                padding: 10px 20px !important;
-                font-size: 12px !important;
-                margin: 6px !important;
-            }
         }
 
         #gameTitle {
@@ -470,27 +272,6 @@
             z-index: 1000;
         }
 
-        @media (max-width: 1024px) and (orientation: landscape) {
-            #reunionScene h1, #gameOverScreen h1 {
-                font-size: 28px !important;
-                margin-bottom: 15px !important;
-            }
-            
-            #reunionScene .jungle-panel {
-                max-width: 90vw !important;
-                padding: 10px !important;
-            }
-            
-            #reunionScene .jungle-panel p {
-                font-size: 12px !important;
-                line-height: 1.4 !important;
-            }
-            
-            #reunionScene .jungle-panel div div {
-                font-size: 10px !important;
-            }
-        }
-
         /* Loading */
         #loadingScreen {
             position: absolute;
@@ -504,19 +285,6 @@
             justify-content: center;
             align-items: center;
             z-index: 2000;
-        }
-
-        @media (max-width: 1024px) and (orientation: landscape) {
-            .loading-bar {
-                width: 80vw !important;
-                height: 15px !important;
-                margin-top: 20px !important;
-            }
-            
-            #loadingScreen h2 {
-                font-size: 18px !important;
-                margin-bottom: 20px !important;
-            }
         }
 
         .loading-bar {
@@ -548,120 +316,6 @@
             letter-spacing: 1px;
         }
 
-        @media (max-width: 1024px) and (orientation: landscape) {
-            #controls {
-                display: none;
-            }
-        }
-
-        /* Mobile Controls Overlay */
-        #mobileControls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 120px;
-            display: none;
-            z-index: 100;
-            touch-action: manipulation;
-            background: linear-gradient(to top, rgba(0, 20, 10, 0.7), transparent);
-        }
-
-        @media (max-width: 1024px) and (orientation: landscape) {
-            #mobileControls {
-                display: block;
-            }
-        }
-
-        .mobile-controls-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            width: 100%;
-            height: 100%;
-            padding: 10px 20px;
-        }
-
-        .mobile-dpad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 5px;
-            width: 120px;
-            height: 120px;
-        }
-
-        .mobile-dpad-btn {
-            background: rgba(0, 30, 15, 0.7);
-            border: 2px solid #4aaf7a;
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #aaffaa;
-            font-size: 20px;
-            font-weight: bold;
-            touch-action: manipulation;
-            -webkit-user-select: none;
-            user-select: none;
-            transition: all 0.1s ease;
-        }
-
-        .mobile-dpad-btn:active {
-            background: rgba(74, 175, 122, 0.7);
-            transform: scale(0.95);
-        }
-
-        .mobile-dpad-center {
-            background: rgba(0, 40, 20, 0.5);
-            border: 2px solid #2a553a;
-        }
-
-        .mobile-action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .mobile-action-row {
-            display: flex;
-            gap: 15px;
-        }
-
-        .mobile-action-btn {
-            width: 60px;
-            height: 60px;
-            background: rgba(0, 30, 15, 0.7);
-            border: 2px solid #4aaf7a;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #aaffaa;
-            font-size: 20px;
-            font-weight: bold;
-            touch-action: manipulation;
-            -webkit-user-select: none;
-            user-select: none;
-            transition: all 0.1s ease;
-        }
-
-        .mobile-action-btn:active {
-            background: rgba(74, 175, 122, 0.7);
-            transform: scale(0.95);
-        }
-
-        .mobile-action-label {
-            color: #4aaf7a;
-            font-size: 10px;
-            text-align: center;
-            margin-top: 2px;
-            font-family: 'Courier New', monospace;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
         /* Combo Display */
         #comboDisplay {
             position: absolute;
@@ -676,15 +330,6 @@
             padding: 5px 10px;
             border-radius: 3px;
             border: 1px solid #ffd700;
-        }
-
-        @media (max-width: 1024px) and (orientation: landscape) {
-            #comboDisplay {
-                top: 60px;
-                right: 10px;
-                font-size: 12px;
-                padding: 4px 8px;
-            }
         }
 
         /* Statue Display */
@@ -702,33 +347,11 @@
             border-radius: 3px;
             border: 1px solid #ffd700;
         }
-
-        @media (max-width: 1024px) and (orientation: landscape) {
-            #statueDisplay {
-                top: 60px;
-                left: 10px;
-                font-size: 12px;
-                padding: 4px 8px;
-            }
-        }
     </style>
 </head>
 <body>
-    <!-- Mobile Orientation Warning -->
-    <div id="orientationWarning">
-        <h2>ROTATE DEVICE</h2>
-        <div class="rotate-icon">📱</div>
-        <p>Please rotate your device to landscape mode<br>to play CHRONO QUEST: MIDNIGHT JUNGLE</p>
-        <p style="color: #2a553a; font-size: 12px; margin-top: 20px;">
-            Created by Atif Ahnaf Chowdhury • Maven Enterprises • 1/27/2026
-        </p>
-    </div>
-
     <div id="gameContainer">
         <canvas id="gameCanvas" width="1024" height="576"></canvas>
-        
-        <!-- Fullscreen Button -->
-        <div id="fullscreenBtn" title="Toggle Fullscreen">⛶</div>
         
         <!-- Jungle UI -->
         <div id="healthPanel" class="jungle-panel">
@@ -757,41 +380,6 @@
         
         <div id="controls">
             ←→ MOVE • SPACE JUMP • Z ATTACK • X BLOCK • ENTER INTERACT • ESC MENU
-        </div>
-
-        <!-- Mobile Touch Controls -->
-        <div id="mobileControls">
-            <div class="mobile-controls-row">
-                <div class="mobile-dpad">
-                    <div class="mobile-dpad-btn" id="mobileUp" style="grid-column: 2; grid-row: 1;">↑</div>
-                    <div class="mobile-dpad-btn" id="mobileLeft" style="grid-column: 1; grid-row: 2;">←</div>
-                    <div class="mobile-dpad-center"></div>
-                    <div class="mobile-dpad-btn" id="mobileRight" style="grid-column: 3; grid-row: 2;">→</div>
-                    <div class="mobile-dpad-btn" id="mobileDown" style="grid-column: 2; grid-row: 3;">↓</div>
-                </div>
-                <div class="mobile-action-buttons">
-                    <div class="mobile-action-row">
-                        <div>
-                            <div class="mobile-action-btn" id="mobileJump">J</div>
-                            <div class="mobile-action-label">JUMP</div>
-                        </div>
-                        <div>
-                            <div class="mobile-action-btn" id="mobileAttack">A</div>
-                            <div class="mobile-action-label">ATTACK</div>
-                        </div>
-                    </div>
-                    <div class="mobile-action-row">
-                        <div>
-                            <div class="mobile-action-btn" id="mobileBlock">B</div>
-                            <div class="mobile-action-label">BLOCK</div>
-                        </div>
-                        <div>
-                            <div class="mobile-action-btn" id="mobileInteract">U</div>
-                            <div class="mobile-action-label">USE</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Screens -->
@@ -938,18 +526,7 @@
                     startTime: 0,
                     currentTime: 0,
                     levelComplete: false,
-                    returningWithStatue: false,
-                    isMobile: false,
-                    mobileInputs: {
-                        left: false,
-                        right: false,
-                        up: false,
-                        down: false,
-                        jump: false,
-                        attack: false,
-                        block: false,
-                        interact: false
-                    }
+                    returningWithStatue: false
                 };
                 
                 // Game constants
@@ -975,88 +552,10 @@
             
             init() {
                 console.log('🌴 Midnight Jungle - Game Initializing...');
-                this.checkMobile();
                 this.setupEventListeners();
-                this.setupFullscreen();
-                this.setupMobileControls();
                 this.createJungleBackground();
                 this.simulateLoading();
                 this.gameLoop();
-            }
-            
-            checkMobile() {
-                this.state.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                console.log('Mobile detected:', this.state.isMobile);
-            }
-            
-            setupFullscreen() {
-                const fullscreenBtn = document.getElementById('fullscreenBtn');
-                if (!fullscreenBtn) return;
-                
-                fullscreenBtn.addEventListener('click', () => {
-                    if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen().catch(err => {
-                            console.log(`Error attempting to enable fullscreen: ${err.message}`);
-                        });
-                    } else {
-                        if (document.exitFullscreen) {
-                            document.exitFullscreen();
-                        }
-                    }
-                });
-                
-                // Update button on fullscreen change
-                document.addEventListener('fullscreenchange', () => {
-                    if (document.fullscreenElement) {
-                        fullscreenBtn.textContent = '⛶';
-                        fullscreenBtn.title = 'Exit Fullscreen';
-                    } else {
-                        fullscreenBtn.textContent = '⛶';
-                        fullscreenBtn.title = 'Enter Fullscreen';
-                    }
-                });
-            }
-            
-            setupMobileControls() {
-                if (!this.state.isMobile) return;
-                
-                const setupButton = (id, key, type = 'down') => {
-                    const btn = document.getElementById(id);
-                    if (!btn) return;
-                    
-                    btn.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        this.state.mobileInputs[key] = true;
-                        if (type === 'jump') this.jump();
-                        if (type === 'attack') this.attack();
-                        if (type === 'block') this.block();
-                        if (type === 'interact') this.interact();
-                    });
-                    
-                    btn.addEventListener('touchend', (e) => {
-                        e.preventDefault();
-                        this.state.mobileInputs[key] = false;
-                    });
-                    
-                    btn.addEventListener('touchcancel', (e) => {
-                        e.preventDefault();
-                        this.state.mobileInputs[key] = false;
-                    });
-                };
-                
-                setupButton('mobileLeft', 'left');
-                setupButton('mobileRight', 'right');
-                setupButton('mobileUp', 'up');
-                setupButton('mobileDown', 'down');
-                setupButton('mobileJump', 'jump', 'jump');
-                setupButton('mobileAttack', 'attack', 'attack');
-                setupButton('mobileBlock', 'block', 'block');
-                setupButton('mobileInteract', 'interact', 'interact');
-                
-                // Prevent context menu on long press
-                document.addEventListener('contextmenu', (e) => {
-                    if (this.state.isMobile) e.preventDefault();
-                });
             }
             
             simulateLoading() {
@@ -1347,39 +846,33 @@
                 this.state.cameraY = 0;
                 this.state.startTime = Date.now();
                 
-                // Show level intro with mobile instructions
+                // Show level intro
                 const levelIntros = [
                     [
                         "LEVEL 1: DARK CANOPY",
+                        "The jungle is thick and dangerous.",
+                        "Watch for venomous snakes in the trees.",
+                        "Collect jungle gems to earn honor.",
                         "",
-                        "MOBILE CONTROLS:",
-                        "←→ : Move",
-                        "J : Jump",
-                        "A : Attack",
-                        "B : Block",
-                        "U : Use/Interact",
-                        "",
-                        "Collect gems, defeat snakes,",
-                        "and reach the temple entrance!"
+                        "CONTROLS:",
+                        "← → : Move | SPACE : Jump",
+                        "Z : Attack | X : Block",
+                        "ENTER : Interact | ESC : Menu"
                     ],
                     [
                         "LEVEL 2: TEMPLE RUINS",
+                        "Ancient stone platforms shift and move.",
+                        "Jaguars prowl these sacred grounds.",
+                        "Stay alert - they hunt in packs.",
                         "",
-                        "Watch for moving platforms!",
-                        "Jaguars are fast and dangerous.",
-                        "",
-                        "Tip: Use block (B) to reduce damage",
-                        "from enemy attacks."
+                        "Defeat all enemies to unlock",
+                        "the temple entrance."
                     ],
                     [
                         "LEVEL 3: GOLDEN SANCTUM",
-                        "",
-                        "Final challenge!",
-                        "Find the Golden Idol,",
-                        "then return to your den.",
-                        "",
-                        "Temple guardians shoot energy blasts.",
-                        "Dodge and attack strategically!"
+                        "The final temple holds our salvation.",
+                        "Temple guardians defend the Golden Idol.",
+                        "Retrieve the idol and return to our den!"
                     ]
                 ];
                 
@@ -1423,21 +916,18 @@
                             e.preventDefault();
                             break;
                         case 'z':
-                        case 'j':
                             if (!this.state.keys.z) {
                                 this.state.keys.z = true;
                                 this.attack();
                             }
                             break;
                         case 'x':
-                        case 'k':
                             if (!this.state.keys.x) {
                                 this.state.keys.x = true;
                                 this.block();
                             }
                             break;
                         case 'enter':
-                        case 'e':
                             this.interact();
                             break;
                         case 'escape':
@@ -1462,12 +952,10 @@
                             this.state.keys.space = false;
                             break;
                         case 'z':
-                        case 'j':
                             this.state.keys.z = false;
                             this.state.player.isAttacking = false;
                             break;
                         case 'x':
-                        case 'k':
                             this.state.keys.x = false;
                             this.state.player.isBlocking = false;
                             break;
@@ -1483,47 +971,6 @@
                 document.getElementById('menuBtn').addEventListener('click', () => this.returnToMenu());
                 document.getElementById('restartBtn').addEventListener('click', () => this.restartGame());
                 document.getElementById('titleBtn').addEventListener('click', () => this.returnToMenu());
-                
-                // Handle window resize
-                window.addEventListener('resize', () => this.handleResize());
-                window.addEventListener('orientationchange', () => {
-                    setTimeout(() => this.handleResize(), 100);
-                });
-                
-                // Prevent scrolling on mobile
-                document.addEventListener('touchmove', (e) => {
-                    if (this.state.gameRunning && !this.state.paused) {
-                        e.preventDefault();
-                    }
-                }, { passive: false });
-                
-                // Handle fullscreen changes
-                document.addEventListener('fullscreenchange', () => this.handleResize());
-                document.addEventListener('webkitfullscreenchange', () => this.handleResize());
-                document.addEventListener('mozfullscreenchange', () => this.handleResize());
-            }
-            
-            handleResize() {
-                const isPortrait = window.innerHeight > window.innerWidth;
-                const orientationWarning = document.getElementById('orientationWarning');
-                const gameContainer = document.getElementById('gameContainer');
-                
-                if (isPortrait && this.state.isMobile) {
-                    orientationWarning.style.display = 'flex';
-                    gameContainer.style.display = 'none';
-                } else {
-                    orientationWarning.style.display = 'none';
-                    gameContainer.style.display = 'block';
-                    
-                    // Adjust canvas size for mobile landscape
-                    if (this.state.isMobile && window.innerWidth < 1024) {
-                        this.canvas.style.width = '100%';
-                        this.canvas.style.height = '100%';
-                    } else {
-                        this.canvas.style.width = '1024px';
-                        this.canvas.style.height = '576px';
-                    }
-                }
             }
             
             startGame() {
@@ -1540,91 +987,47 @@
                 
                 this.loadLevel(1);
                 
-                // Show initial instructions
-                setTimeout(() => {
-                    if (this.state.isMobile) {
-                        this.showDialogue([
-                            "JUNGLE WARRIOR",
-                            "",
-                            "CONTROLS:",
-                            "←→ : Move",
-                            "J : Jump",
-                            "A : Attack",
-                            "B : Block",
-                            "U : Use",
-                            "",
-                            "Collect gems for score.",
-                            "Defeat enemies, reach temples.",
-                            "Find the Golden Idol!",
-                            "",
-                            "Good luck, warrior!"
-                        ]);
-                    } else {
-                        this.showDialogue([
-                            "THE JUNGLE CALLS",
-                            "Our tribe faces extinction.",
-                            "An ancient curse consumes our lands.",
-                            "",
-                            "Only the Golden Idol can save us.",
-                            "It lies deep in the jungle.",
-                            "Three temples guard the path.",
-                            "",
-                            "Bring back the idol, warrior.",
-                            "Our survival depends on you."
-                        ]);
-                    }
-                }, 500);
+                this.showDialogue([
+                    "THE JUNGLE CALLS",
+                    "Our tribe faces extinction.",
+                    "An ancient curse consumes our lands.",
+                    "",
+                    "Only the Golden Idol can save us.",
+                    "It lies deep in the jungle.",
+                    "Three temples guard the path.",
+                    "",
+                    "Bring back the idol, warrior.",
+                    "Our survival depends on you."
+                ]);
             }
             
             showTutorial() {
-                if (this.state.isMobile) {
-                    this.showDialogue([
-                        "MOBILE SURVIVAL GUIDE",
-                        "━━━━━━━━━━━━━━━━━━━━━━━━",
-                        "",
-                        "CONTROLS:",
-                        "←→ : Move left/right",
-                        "J : Jump between platforms",
-                        "A : Attack with spear",
-                        "B : Block (reduces damage)",
-                        "U : Use/Interact",
-                        "",
-                        "STRATEGY:",
-                        "• Hit combos increase damage",
-                        "• Collect all jungle gems",
-                        "• Defeat all enemies in area",
-                        "• Level exit activates after",
-                        "• Find Golden Idol in Level 3",
-                        "",
-                        "May the jungle spirits guide you."
-                    ]);
-                } else {
-                    this.showDialogue([
-                        "JUNGLE SURVIVAL GUIDE",
-                        "━━━━━━━━━━━━━━━━━━━━━━━━",
-                        "",
-                        "KEYBOARD CONTROLS:",
-                        "←→ or A/D : Move",
-                        "SPACE or W : Jump",
-                        "Z or J : Attack",
-                        "X or K : Block",
-                        "ENTER or E : Interact",
-                        "ESC : Pause Menu",
-                        "",
-                        "OBJECTIVES:",
-                        "• Collect glowing jungle gems",
-                        "• Defeat all enemies in area",
-                        "• Reach temple entrance",
-                        "• Find Golden Idol in Level 3",
-                        "• Return idol to your den",
-                        "",
-                        "Combo hits increase damage!",
-                        "Block reduces damage by 70%",
-                        "",
-                        "━━━━━━━━━━━━━━━━━━━━━━━━",
-                        "May the jungle spirits guide you."
-                    ]);
-                }
+                this.showDialogue([
+                    "JUNGLE SURVIVAL GUIDE",
+                    "━━━━━━━━━━━━━━━━━━━━━━━━",
+                    "",
+                    "KEYBOARD CONTROLS:",
+                    "←→ or A/D : Move",
+                    "SPACE or W : Jump",
+                    "Z : Attack with spear",
+                    "X : Block (reduces damage)",
+                    "ENTER : Interact/Use",
+                    "ESC : Pause Menu",
+                    "",
+                    "OBJECTIVES:",
+                    "• Collect glowing jungle gems",
+                    "• Defeat all enemies in each area",
+                    "• Temple entrance unlocks after",
+                    "• Find Golden Idol in Temple 3",
+                    "• Return idol to your den",
+                    "",
+                    "COMBAT SYSTEM:",
+                    "• Combo hits increase damage",
+                    "• Block reduces damage by 70%",
+                    "• Watch for enemy attack patterns",
+                    "",
+                    "May the jungle spirits guide you."
+                ]);
             }
             
             showCredits() {
@@ -1744,39 +1147,6 @@
             
             updatePlayer(deltaTime) {
                 const p = this.state.player;
-                
-                // Handle mobile input
-                if (this.state.isMobile) {
-                    if (this.state.mobileInputs.left) {
-                        this.state.keys.left = true;
-                        this.state.keys.right = false;
-                    } else if (this.state.mobileInputs.right) {
-                        this.state.keys.right = true;
-                        this.state.keys.left = false;
-                    } else {
-                        this.state.keys.left = false;
-                        this.state.keys.right = false;
-                    }
-                    
-                    if (this.state.mobileInputs.jump) {
-                        this.state.mobileInputs.jump = false;
-                    }
-                    
-                    if (this.state.mobileInputs.attack) {
-                        this.state.mobileInputs.attack = false;
-                        this.attack();
-                    }
-                    
-                    if (this.state.mobileInputs.block) {
-                        this.state.mobileInputs.block = false;
-                        this.block();
-                    }
-                    
-                    if (this.state.mobileInputs.interact) {
-                        this.state.mobileInputs.interact = false;
-                        this.interact();
-                    }
-                }
                 
                 // Horizontal movement
                 if (this.state.keys.left) {
@@ -3195,9 +2565,6 @@
         window.addEventListener('load', () => {
             const game = new MidnightJungle();
             window.game = game;
-            
-            // Check orientation on load
-            setTimeout(() => game.handleResize(), 100);
             
             // Auto-start for demo
             setTimeout(() => {
