@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>CHRONO QUEST: MIDNIGHT JUNGLE</title>
     <style>
         /* =============== MIDNIGHT JUNGLE STYLES =============== */
@@ -21,6 +23,7 @@
             height: 100%;
             overflow: hidden;
             touch-action: manipulation;
+            background: #000;
         }
 
         body {
@@ -33,6 +36,19 @@
             background: radial-gradient(circle at 50% 50%, #001a00 0%, #000000 100%);
             image-rendering: pixelated;
             image-rendering: crisp-edges;
+        }
+
+        /* Fullscreen styles */
+        :fullscreen {
+            background: #000;
+        }
+
+        :-webkit-full-screen {
+            background: #000;
+        }
+
+        :-moz-full-screen {
+            background: #000;
         }
 
         /* Mobile Orientation Warning */
@@ -77,6 +93,30 @@
             50% { transform: rotate(90deg); }
         }
 
+        /* Fullscreen button */
+        #fullscreenBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 30, 15, 0.7);
+            border: 2px solid #4aaf7a;
+            color: #aaffaa;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 101;
+            transition: all 0.2s ease;
+        }
+
+        #fullscreenBtn:hover {
+            background: rgba(74, 175, 122, 0.7);
+        }
+
         /* Game Container */
         #gameContainer {
             position: relative;
@@ -100,11 +140,16 @@
                 max-width: none;
                 max-height: none;
                 border-radius: 0;
+                box-shadow: none;
             }
             
             canvas {
                 width: 100% !important;
                 height: 100% !important;
+            }
+            
+            #fullscreenBtn {
+                display: none;
             }
         }
 
@@ -147,16 +192,17 @@
             .jungle-panel {
                 padding: 8px 12px;
                 font-size: 11px;
+                border-width: 1px;
             }
             
             #healthPanel {
-                width: 200px !important;
+                width: 180px !important;
                 top: 10px !important;
                 left: 10px !important;
             }
             
             #weaponPanel {
-                width: 160px !important;
+                width: 140px !important;
                 top: 10px !important;
                 right: 10px !important;
             }
@@ -164,6 +210,7 @@
             #levelPanel {
                 top: 10px !important;
                 padding: 6px 10px !important;
+                font-size: 10px !important;
             }
         }
 
@@ -261,7 +308,7 @@
         @media (max-width: 1024px) and (orientation: landscape) {
             #dialogueBox {
                 width: 90vw;
-                bottom: 60px;
+                bottom: 140px;
                 padding: 15px;
                 min-height: 120px;
             }
@@ -269,6 +316,14 @@
             #dialogueText {
                 font-size: 12px !important;
                 line-height: 1.4 !important;
+                margin-bottom: 15px !important;
+            }
+            
+            #continueBtn {
+                padding: 6px 16px !important;
+                font-size: 10px !important;
+                bottom: 15px !important;
+                right: 15px !important;
             }
         }
 
@@ -296,15 +351,6 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             border-radius: 3px;
-        }
-
-        @media (max-width: 1024px) and (orientation: landscape) {
-            #continueBtn {
-                padding: 6px 16px;
-                font-size: 10px;
-                bottom: 15px;
-                right: 15px;
-            }
         }
 
         #continueBtn:hover {
@@ -439,6 +485,10 @@
                 font-size: 12px !important;
                 line-height: 1.4 !important;
             }
+            
+            #reunionScene .jungle-panel div div {
+                font-size: 10px !important;
+            }
         }
 
         /* Loading */
@@ -500,11 +550,7 @@
 
         @media (max-width: 1024px) and (orientation: landscape) {
             #controls {
-                font-size: 9px;
-                bottom: 10px;
-                left: 10px;
-                right: 10px;
-                text-align: center;
+                display: none;
             }
         }
 
@@ -518,6 +564,7 @@
             display: none;
             z-index: 100;
             touch-action: manipulation;
+            background: linear-gradient(to top, rgba(0, 20, 10, 0.7), transparent);
         }
 
         @media (max-width: 1024px) and (orientation: landscape) {
@@ -529,12 +576,60 @@
         .mobile-controls-row {
             display: flex;
             justify-content: space-between;
+            align-items: flex-end;
             width: 100%;
-            height: 60px;
-            padding: 10px;
+            height: 100%;
+            padding: 10px 20px;
         }
 
-        .mobile-btn {
+        .mobile-dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 5px;
+            width: 120px;
+            height: 120px;
+        }
+
+        .mobile-dpad-btn {
+            background: rgba(0, 30, 15, 0.7);
+            border: 2px solid #4aaf7a;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #aaffaa;
+            font-size: 20px;
+            font-weight: bold;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+            transition: all 0.1s ease;
+        }
+
+        .mobile-dpad-btn:active {
+            background: rgba(74, 175, 122, 0.7);
+            transform: scale(0.95);
+        }
+
+        .mobile-dpad-center {
+            background: rgba(0, 40, 20, 0.5);
+            border: 2px solid #2a553a;
+        }
+
+        .mobile-action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .mobile-action-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .mobile-action-btn {
             width: 60px;
             height: 60px;
             background: rgba(0, 30, 15, 0.7);
@@ -544,7 +639,7 @@
             justify-content: center;
             align-items: center;
             color: #aaffaa;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             touch-action: manipulation;
             -webkit-user-select: none;
@@ -552,39 +647,19 @@
             transition: all 0.1s ease;
         }
 
-        .mobile-btn:active {
+        .mobile-action-btn:active {
             background: rgba(74, 175, 122, 0.7);
             transform: scale(0.95);
         }
 
-        .mobile-dpad {
-            display: grid;
-            grid-template-columns: repeat(3, 60px);
-            grid-template-rows: repeat(3, 60px);
-            gap: 5px;
-        }
-
-        .mobile-dpad-btn {
-            background: rgba(0, 30, 15, 0.7);
-            border: 2px solid #4aaf7a;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #aaffaa;
-            font-size: 20px;
-            touch-action: manipulation;
-        }
-
-        .mobile-dpad-btn:active {
-            background: rgba(74, 175, 122, 0.7);
-        }
-
-        .mobile-dpad-center {
-            grid-column: 2;
-            grid-row: 2;
-            background: rgba(0, 40, 20, 0.5);
-            border: 2px solid #2a553a;
+        .mobile-action-label {
+            color: #4aaf7a;
+            font-size: 10px;
+            text-align: center;
+            margin-top: 2px;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         /* Combo Display */
@@ -597,6 +672,10 @@
             font-size: 14px;
             text-shadow: 0 0 5px #000;
             display: none;
+            background: rgba(0, 20, 10, 0.7);
+            padding: 5px 10px;
+            border-radius: 3px;
+            border: 1px solid #ffd700;
         }
 
         @media (max-width: 1024px) and (orientation: landscape) {
@@ -604,6 +683,7 @@
                 top: 60px;
                 right: 10px;
                 font-size: 12px;
+                padding: 4px 8px;
             }
         }
 
@@ -617,6 +697,10 @@
             font-size: 14px;
             text-shadow: 0 0 5px #000;
             display: none;
+            background: rgba(0, 20, 10, 0.7);
+            padding: 5px 10px;
+            border-radius: 3px;
+            border: 1px solid #ffd700;
         }
 
         @media (max-width: 1024px) and (orientation: landscape) {
@@ -624,6 +708,7 @@
                 top: 60px;
                 left: 10px;
                 font-size: 12px;
+                padding: 4px 8px;
             }
         }
     </style>
@@ -642,6 +727,9 @@
     <div id="gameContainer">
         <canvas id="gameCanvas" width="1024" height="576"></canvas>
         
+        <!-- Fullscreen Button -->
+        <div id="fullscreenBtn" title="Toggle Fullscreen">⛶</div>
+        
         <!-- Jungle UI -->
         <div id="healthPanel" class="jungle-panel">
             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
@@ -656,7 +744,7 @@
         <div id="weaponPanel" class="jungle-panel">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span>WEAPON:</span>
-                <span id="currentWeapon">JUNGLE SPEAR</span>
+                <span id="currentWeapon">SPEAR</span>
             </div>
         </div>
         
@@ -681,11 +769,27 @@
                     <div class="mobile-dpad-btn" id="mobileRight" style="grid-column: 3; grid-row: 2;">→</div>
                     <div class="mobile-dpad-btn" id="mobileDown" style="grid-column: 2; grid-row: 3;">↓</div>
                 </div>
-                <div style="display: flex; gap: 20px; align-items: center;">
-                    <div class="mobile-btn" id="mobileJump">JUMP</div>
-                    <div class="mobile-btn" id="mobileAttack">ATTACK</div>
-                    <div class="mobile-btn" id="mobileBlock">BLOCK</div>
-                    <div class="mobile-btn" id="mobileInteract">USE</div>
+                <div class="mobile-action-buttons">
+                    <div class="mobile-action-row">
+                        <div>
+                            <div class="mobile-action-btn" id="mobileJump">J</div>
+                            <div class="mobile-action-label">JUMP</div>
+                        </div>
+                        <div>
+                            <div class="mobile-action-btn" id="mobileAttack">A</div>
+                            <div class="mobile-action-label">ATTACK</div>
+                        </div>
+                    </div>
+                    <div class="mobile-action-row">
+                        <div>
+                            <div class="mobile-action-btn" id="mobileBlock">B</div>
+                            <div class="mobile-action-label">BLOCK</div>
+                        </div>
+                        <div>
+                            <div class="mobile-action-btn" id="mobileInteract">U</div>
+                            <div class="mobile-action-label">USE</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -798,7 +902,7 @@
                         width: 28, height: 42,
                         velX: 0, velY: 0,
                         health: 100, maxHealth: 100,
-                        weapon: 'JUNGLE SPEAR',
+                        weapon: 'SPEAR',
                         damage: 20,
                         facingRight: true,
                         onGround: false,
@@ -873,6 +977,7 @@
                 console.log('🌴 Midnight Jungle - Game Initializing...');
                 this.checkMobile();
                 this.setupEventListeners();
+                this.setupFullscreen();
                 this.setupMobileControls();
                 this.createJungleBackground();
                 this.simulateLoading();
@@ -882,6 +987,34 @@
             checkMobile() {
                 this.state.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                 console.log('Mobile detected:', this.state.isMobile);
+            }
+            
+            setupFullscreen() {
+                const fullscreenBtn = document.getElementById('fullscreenBtn');
+                if (!fullscreenBtn) return;
+                
+                fullscreenBtn.addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(err => {
+                            console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                        });
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        }
+                    }
+                });
+                
+                // Update button on fullscreen change
+                document.addEventListener('fullscreenchange', () => {
+                    if (document.fullscreenElement) {
+                        fullscreenBtn.textContent = '⛶';
+                        fullscreenBtn.title = 'Exit Fullscreen';
+                    } else {
+                        fullscreenBtn.textContent = '⛶';
+                        fullscreenBtn.title = 'Enter Fullscreen';
+                    }
+                });
             }
             
             setupMobileControls() {
@@ -1056,7 +1189,7 @@
                         y: 300,
                         width: 60,
                         height: 100,
-                        active: true
+                        active: false
                     };
                 }
                 
@@ -1121,7 +1254,7 @@
                         y: 280,
                         width: 60,
                         height: 100,
-                        active: true
+                        active: false
                     };
                 }
                 
@@ -1214,25 +1347,39 @@
                 this.state.cameraY = 0;
                 this.state.startTime = Date.now();
                 
-                // Show level intro
+                // Show level intro with mobile instructions
                 const levelIntros = [
                     [
                         "LEVEL 1: DARK CANOPY",
-                        "The jungle is thick and dangerous.",
-                        "Watch for venomous snakes in the trees.",
-                        "Collect jungle gems to earn honor."
+                        "",
+                        "MOBILE CONTROLS:",
+                        "←→ : Move",
+                        "J : Jump",
+                        "A : Attack",
+                        "B : Block",
+                        "U : Use/Interact",
+                        "",
+                        "Collect gems, defeat snakes,",
+                        "and reach the temple entrance!"
                     ],
                     [
                         "LEVEL 2: TEMPLE RUINS",
-                        "Ancient stone platforms shift and move.",
-                        "Jaguars prowl these sacred grounds.",
-                        "Stay alert - they hunt in packs."
+                        "",
+                        "Watch for moving platforms!",
+                        "Jaguars are fast and dangerous.",
+                        "",
+                        "Tip: Use block (B) to reduce damage",
+                        "from enemy attacks."
                     ],
                     [
                         "LEVEL 3: GOLDEN SANCTUM",
-                        "The final temple holds our salvation.",
-                        "Temple guardians defend the Golden Idol.",
-                        "Retrieve the idol and return to our den!"
+                        "",
+                        "Final challenge!",
+                        "Find the Golden Idol,",
+                        "then return to your den.",
+                        "",
+                        "Temple guardians shoot energy blasts.",
+                        "Dodge and attack strategically!"
                     ]
                 ];
                 
@@ -1276,18 +1423,21 @@
                             e.preventDefault();
                             break;
                         case 'z':
+                        case 'j':
                             if (!this.state.keys.z) {
                                 this.state.keys.z = true;
                                 this.attack();
                             }
                             break;
                         case 'x':
+                        case 'k':
                             if (!this.state.keys.x) {
                                 this.state.keys.x = true;
                                 this.block();
                             }
                             break;
                         case 'enter':
+                        case 'e':
                             this.interact();
                             break;
                         case 'escape':
@@ -1312,10 +1462,12 @@
                             this.state.keys.space = false;
                             break;
                         case 'z':
+                        case 'j':
                             this.state.keys.z = false;
                             this.state.player.isAttacking = false;
                             break;
                         case 'x':
+                        case 'k':
                             this.state.keys.x = false;
                             this.state.player.isBlocking = false;
                             break;
@@ -1344,6 +1496,11 @@
                         e.preventDefault();
                     }
                 }, { passive: false });
+                
+                // Handle fullscreen changes
+                document.addEventListener('fullscreenchange', () => this.handleResize());
+                document.addEventListener('webkitfullscreenchange', () => this.handleResize());
+                document.addEventListener('mozfullscreenchange', () => this.handleResize());
             }
             
             handleResize() {
@@ -1383,43 +1540,91 @@
                 
                 this.loadLevel(1);
                 
-                this.showDialogue([
-                    "THE JUNGLE CALLS",
-                    "Our tribe faces extinction.",
-                    "An ancient curse consumes our lands.",
-                    "",
-                    "Only the Golden Idol can save us.",
-                    "It lies deep in the jungle.",
-                    "Three temples guard the path.",
-                    "",
-                    "Bring back the idol, warrior.",
-                    "Our survival depends on you."
-                ]);
+                // Show initial instructions
+                setTimeout(() => {
+                    if (this.state.isMobile) {
+                        this.showDialogue([
+                            "JUNGLE WARRIOR",
+                            "",
+                            "CONTROLS:",
+                            "←→ : Move",
+                            "J : Jump",
+                            "A : Attack",
+                            "B : Block",
+                            "U : Use",
+                            "",
+                            "Collect gems for score.",
+                            "Defeat enemies, reach temples.",
+                            "Find the Golden Idol!",
+                            "",
+                            "Good luck, warrior!"
+                        ]);
+                    } else {
+                        this.showDialogue([
+                            "THE JUNGLE CALLS",
+                            "Our tribe faces extinction.",
+                            "An ancient curse consumes our lands.",
+                            "",
+                            "Only the Golden Idol can save us.",
+                            "It lies deep in the jungle.",
+                            "Three temples guard the path.",
+                            "",
+                            "Bring back the idol, warrior.",
+                            "Our survival depends on you."
+                        ]);
+                    }
+                }, 500);
             }
             
             showTutorial() {
-                this.showDialogue([
-                    "JUNGLE SURVIVAL GUIDE",
-                    "━━━━━━━━━━━━━━━━━━━━━━━━",
-                    "",
-                    "MOVEMENT:",
-                    "← → or DPAD: Move through the jungle",
-                    "SPACE or JUMP: Leap between platforms",
-                    "",
-                    "COMBAT:",
-                    "Z or ATTACK: Thrust your jungle spear",
-                    "X or BLOCK: Raise shield (reduces damage)",
-                    "Combo hits increase your damage!",
-                    "",
-                    "OBJECTIVES:",
-                    "• Collect glowing jungle gems",
-                    "• Defeat temple guardians",
-                    "• Find the Golden Idol in Temple 3",
-                    "• Return the idol to your den",
-                    "",
-                    "━━━━━━━━━━━━━━━━━━━━━━━━",
-                    "May the jungle spirits guide you."
-                ]);
+                if (this.state.isMobile) {
+                    this.showDialogue([
+                        "MOBILE SURVIVAL GUIDE",
+                        "━━━━━━━━━━━━━━━━━━━━━━━━",
+                        "",
+                        "CONTROLS:",
+                        "←→ : Move left/right",
+                        "J : Jump between platforms",
+                        "A : Attack with spear",
+                        "B : Block (reduces damage)",
+                        "U : Use/Interact",
+                        "",
+                        "STRATEGY:",
+                        "• Hit combos increase damage",
+                        "• Collect all jungle gems",
+                        "• Defeat all enemies in area",
+                        "• Level exit activates after",
+                        "• Find Golden Idol in Level 3",
+                        "",
+                        "May the jungle spirits guide you."
+                    ]);
+                } else {
+                    this.showDialogue([
+                        "JUNGLE SURVIVAL GUIDE",
+                        "━━━━━━━━━━━━━━━━━━━━━━━━",
+                        "",
+                        "KEYBOARD CONTROLS:",
+                        "←→ or A/D : Move",
+                        "SPACE or W : Jump",
+                        "Z or J : Attack",
+                        "X or K : Block",
+                        "ENTER or E : Interact",
+                        "ESC : Pause Menu",
+                        "",
+                        "OBJECTIVES:",
+                        "• Collect glowing jungle gems",
+                        "• Defeat all enemies in area",
+                        "• Reach temple entrance",
+                        "• Find Golden Idol in Level 3",
+                        "• Return idol to your den",
+                        "",
+                        "Combo hits increase damage!",
+                        "Block reduces damage by 70%",
+                        "",
+                        "━━━━━━━━━━━━━━━━━━━━━━━━",
+                        "May the jungle spirits guide you."
+                    ]);
+                }
             }
             
             showCredits() {
@@ -1464,6 +1669,7 @@
                 
                 dialogueText.innerHTML = lines.map(line => {
                     if (line.includes('━━━━━━━━')) return `<div style="border-bottom: 1px solid #4aaf7a; margin: 5px 0;"></div>`;
+                    if (line === '') return '<br>';
                     return line;
                 }).join('<br>');
                 
@@ -1543,8 +1749,10 @@
                 if (this.state.isMobile) {
                     if (this.state.mobileInputs.left) {
                         this.state.keys.left = true;
+                        this.state.keys.right = false;
                     } else if (this.state.mobileInputs.right) {
                         this.state.keys.right = true;
+                        this.state.keys.left = false;
                     } else {
                         this.state.keys.left = false;
                         this.state.keys.right = false;
@@ -1740,6 +1948,17 @@
                             p.coins += enemy.type === 'guardian' ? 3 : enemy.type === 'jaguar' ? 2 : 1;
                             p.score += enemy.type === 'guardian' ? 300 : enemy.type === 'jaguar' ? 200 : 100;
                             this.state.enemies = this.state.enemies.filter(e => e !== enemy);
+                            
+                            // Check if all enemies are defeated
+                            if (this.state.enemies.length === 0 && this.state.levelEnd) {
+                                this.state.levelEnd.active = true;
+                                this.showFloatingText(
+                                    this.state.levelEnd.x + this.state.levelEnd.width/2,
+                                    this.state.levelEnd.y - 40,
+                                    "TEMPLE UNLOCKED!",
+                                    '#4aaf7a'
+                                );
+                            }
                         }
                     }
                 }
@@ -2315,18 +2534,16 @@
             
             checkLevelCompletion() {
                 // Check if all enemies are defeated
-                if (this.state.enemies.length === 0 && this.state.levelEnd) {
+                if (this.state.enemies.length === 0 && this.state.levelEnd && !this.state.levelComplete) {
                     this.state.levelEnd.active = true;
                     
                     // Show hint
-                    if (!this.state.levelComplete) {
-                        this.showFloatingText(
-                            this.state.levelEnd.x + this.state.levelEnd.width/2,
-                            this.state.levelEnd.y - 40,
-                            "ENTER TEMPLE",
-                            '#4aaf7a'
-                        );
-                    }
+                    this.showFloatingText(
+                        this.state.levelEnd.x + this.state.levelEnd.width/2,
+                        this.state.levelEnd.y - 40,
+                        "ENTER TEMPLE",
+                        '#4aaf7a'
+                    );
                 }
                 
                 // Level 3: Show den hint when carrying statue
@@ -2862,6 +3079,18 @@
                             20
                         );
                         this.ctx.globalAlpha = 1.0;
+                        
+                        // Entrance glow effect
+                        const pulse = Math.sin(Date.now() * 0.003) * 0.2 + 0.8;
+                        this.ctx.globalAlpha = 0.3 * pulse;
+                        this.ctx.fillStyle = '#4aaf7a';
+                        this.ctx.fillRect(
+                            Math.floor(end.x + 5),
+                            Math.floor(end.y + 55),
+                            Math.floor(end.width - 10),
+                            30
+                        );
+                        this.ctx.globalAlpha = 1.0;
                     } else {
                         // Inactive temple
                         this.ctx.fillStyle = '#654321';
@@ -2903,7 +3132,8 @@
                     );
                     
                     // Statue glow
-                    this.ctx.globalAlpha = 0.4;
+                    const pulse = Math.sin(Date.now() * 0.002) * 0.3 + 0.7;
+                    this.ctx.globalAlpha = 0.4 * pulse;
                     this.ctx.shadowColor = '#ffd700';
                     this.ctx.shadowBlur = 20;
                     this.ctx.fillRect(
