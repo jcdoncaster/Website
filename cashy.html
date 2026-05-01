@@ -1,1867 +1,1836 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CASHY — Transfer Money</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --ink: #0A0A0A;
-            --paper: #F5F2EC;
-            --card: #FEFCF8;
-            --green: #1A6B47;
-            --green-light: #E8F5EE;
-            --green-mid: #2D9660;
-            --amber: #D97706;
-            --amber-light: #FEF3C7;
-            --red: #DC2626;
-            --muted: #7A7469;
-            --border: #E2DDD4;
-            --border-dark: #C8C0B4;
-            --shadow: 0 2px 12px rgba(10,10,10,0.08);
-            --shadow-lg: 0 8px 32px rgba(10,10,10,0.12);
-            --r: 16px;
-            --r-sm: 10px;
-        }
-
-        body {
-            font-family: 'Sora', sans-serif;
-            background: var(--paper);
-            color: var(--ink);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 20px 16px 60px;
-        }
-
-        .shell {
-            width: 100%;
-            max-width: 480px;
-            margin: 0 auto;
-        }
-
-        /* ── HEADER ── */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 28px 0 20px;
-            margin-bottom: 4px;
-        }
-
-        .logo {
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--ink);
-        }
-
-        .logo span {
-            color: var(--green-mid);
-        }
-
-        .logo-sub {
-            font-size: 11px;
-            font-weight: 400;
-            color: var(--muted);
-            letter-spacing: 0.5px;
-            margin-top: 2px;
-        }
-
-        .admin-trigger {
-            background: none;
-            border: 1.5px solid var(--border-dark);
-            color: var(--muted);
-            font-family: 'Sora', sans-serif;
-            font-size: 13px;
-            font-weight: 500;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .admin-trigger:hover {
-            border-color: var(--ink);
-            color: var(--ink);
-        }
-
-        /* ── CARD ── */
-        .card {
-            background: var(--card);
-            border-radius: var(--r);
-            border: 1.5px solid var(--border);
-            padding: 32px 28px;
-            box-shadow: var(--shadow);
-        }
-
-        @media (max-width: 400px) {
-            .card { padding: 24px 18px; }
-        }
-
-        .card-title {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--ink);
-            margin-bottom: 6px;
-        }
-
-        .card-sub {
-            font-size: 14px;
-            color: var(--muted);
-            margin-bottom: 28px;
-            line-height: 1.5;
-        }
-
-        /* ── STEPS ── */
-        .step { display: none; animation: rise 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-        .step.active { display: block; }
-
-        @keyframes rise {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ── PROGRESS DOTS ── */
-        .progress {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .progress-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: var(--border-dark);
-            transition: all 0.3s;
-        }
-
-        .progress-dot.active {
-            background: var(--green-mid);
-            width: 24px;
-            border-radius: 4px;
-        }
-
-        .progress-dot.done {
-            background: var(--green-light);
-            border: 1.5px solid var(--green-mid);
-        }
-
-        /* ── FORM ELEMENTS ── */
-        .field { margin-bottom: 20px; }
-
-        .field label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--ink);
-            margin-bottom: 8px;
-            letter-spacing: 0.2px;
-        }
-
-        .input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1.5px solid var(--border-dark);
-            border-radius: var(--r-sm);
-            font-family: 'Sora', sans-serif;
-            font-size: 16px;
-            color: var(--ink);
-            background: white;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            -webkit-appearance: none;
-        }
-
-        .input:focus {
-            outline: none;
-            border-color: var(--green-mid);
-            box-shadow: 0 0 0 3px rgba(45,150,96,0.12);
-        }
-
-        .input::placeholder { color: var(--muted); opacity: 0.7; }
-
-        .field-error {
-            font-size: 12px;
-            color: var(--red);
-            margin-top: 6px;
-            display: none;
-        }
-
-        .field-error.show { display: block; }
-
-        /* ── PLATFORM PILLS ── */
-        .platform-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 8px;
-        }
-
-        .pill {
-            border: 1.5px solid var(--border-dark);
-            border-radius: var(--r-sm);
-            padding: 14px 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            user-select: none;
-        }
-
-        .pill:hover { border-color: var(--green-mid); background: var(--green-light); }
-
-        .pill.selected {
-            border-color: var(--green-mid);
-            background: var(--green-light);
-            box-shadow: 0 0 0 2px rgba(45,150,96,0.2);
-        }
-
-        .pill-icon {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px;
-        }
-
-        .pill-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--ink);
-        }
-
-        .bkash-icon { background: #fce4ef; color: #E2136E; }
-        .nagad-icon { background: #fff8e1; color: #F8B319; }
-        .rocket-icon { background: #ede9f8; color: #6B46C1; }
-
-        /* ── AMOUNT INPUT ── */
-        .amount-wrap {
-            position: relative;
-        }
-
-        .amount-prefix {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--ink);
-            pointer-events: none;
-        }
-
-        #amount {
-            padding-left: 42px;
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        /* ── BREAKDOWN ── */
-        .breakdown {
-            background: var(--green-light);
-            border: 1.5px solid #A7D7BB;
-            border-radius: var(--r-sm);
-            padding: 16px 18px;
-            margin: 20px 0;
-        }
-
-        .breakdown-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 0;
-            font-size: 14px;
-            color: var(--green);
-        }
-
-        .breakdown-row.total {
-            border-top: 1px solid #A7D7BB;
-            margin-top: 8px;
-            padding-top: 12px;
-            font-size: 17px;
-            font-weight: 700;
-            color: var(--green);
-        }
-
-        /* ── CONFIRM ROWS ── */
-        .confirm-block {
-            border: 1.5px solid var(--border);
-            border-radius: var(--r-sm);
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .confirm-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border);
-            font-size: 14px;
-        }
-
-        .confirm-row:last-child { border-bottom: none; }
-
-        .confirm-label { color: var(--muted); font-weight: 500; }
-
-        .confirm-val {
-            font-weight: 600;
-            color: var(--ink);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .badge {
-            font-size: 12px;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 20px;
-            background: var(--green-light);
-            color: var(--green);
-        }
-
-        /* ── PAYMENT BOX ── */
-        .pay-box {
-            background: var(--ink);
-            border-radius: var(--r-sm);
-            padding: 22px 20px;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .pay-box-label {
-            font-size: 12px;
-            color: rgba(255,255,255,0.55);
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .pay-number {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 26px;
-            font-weight: 600;
-            color: white;
-            letter-spacing: 1px;
-        }
-
-        .pay-amount-box {
-            background: var(--green-mid);
-            border-radius: var(--r-sm);
-            padding: 18px 20px;
-            text-align: center;
-            margin: 12px 0 20px;
-        }
-
-        .pay-amount-label {
-            font-size: 12px;
-            color: rgba(255,255,255,0.7);
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-
-        .pay-amount-val {
-            font-size: 30px;
-            font-weight: 800;
-            color: white;
-            letter-spacing: -0.5px;
-        }
-
-        .steps-list {
-            margin: 18px 0;
-            padding: 16px 18px;
-            background: white;
-            border: 1.5px solid var(--border);
-            border-radius: var(--r-sm);
-        }
-
-        .steps-list h4 {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--ink);
-            margin-bottom: 12px;
-        }
-
-        .steps-list ol {
-            padding-left: 18px;
-        }
-
-        .steps-list li {
-            font-size: 14px;
-            color: var(--muted);
-            margin-bottom: 8px;
-            line-height: 1.5;
-        }
-
-        .trx-id-box {
-            border: 2px dashed var(--border-dark);
-            border-radius: var(--r-sm);
-            padding: 16px;
-            text-align: center;
-            margin-top: 18px;
-        }
-
-        .trx-id-label {
-            font-size: 12px;
-            color: var(--muted);
-            margin-bottom: 6px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .trx-id-val {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--green-mid);
-            letter-spacing: 1.5px;
-        }
-
-        .trx-id-hint {
-            font-size: 12px;
-            color: var(--muted);
-            margin-top: 6px;
-            line-height: 1.4;
-        }
-
-        /* ── ALERT BOXES ── */
-        .alert {
-            display: flex;
-            gap: 12px;
-            padding: 14px 16px;
-            border-radius: var(--r-sm);
-            margin-bottom: 20px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .alert i { margin-top: 2px; flex-shrink: 0; }
-
-        .alert-amber {
-            background: var(--amber-light);
-            border: 1.5px solid #FCD34D;
-            color: #92400E;
-        }
-
-        .alert-green {
-            background: var(--green-light);
-            border: 1.5px solid #A7D7BB;
-            color: var(--green);
-        }
-
-        .alert-amber i { color: var(--amber); }
-        .alert-green i { color: var(--green-mid); }
-
-        /* ── LOADER ── */
-        .loader-wrap {
-            text-align: center;
-            padding: 24px 0 16px;
-        }
-
-        .spinner {
-            width: 52px; height: 52px;
-            border: 3px solid var(--border);
-            border-top-color: var(--green-mid);
-            border-radius: 50%;
-            animation: spin 0.9s linear infinite;
-            margin: 0 auto 14px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loader-text {
-            font-size: 14px;
-            color: var(--muted);
-        }
-
-        /* ── VIDEO ── */
-        .video-wrap {
-            border-radius: var(--r-sm);
-            overflow: hidden;
-            margin: 18px 0;
-            border: 1.5px solid var(--border);
-        }
-
-        .video-wrap iframe {
-            width: 100%;
-            height: 220px;
-            display: block;
-            border: none;
-        }
-
-        /* ── SUCCESS ── */
-        .success-icon-wrap {
-            width: 88px; height: 88px;
-            background: var(--green-light);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            color: var(--green-mid);
-            font-size: 40px;
-        }
-
-        /* ── DIVIDER ── */
-        .divider {
-            height: 1px;
-            background: var(--border);
-            margin: 20px 0;
-        }
-
-        /* ── BUTTONS ── */
-        .btn-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 24px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 15px 18px;
-            border: none;
-            border-radius: var(--r-sm);
-            font-family: 'Sora', sans-serif;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            text-decoration: none;
-            -webkit-appearance: none;
-        }
-
-        .btn-primary {
-            background: var(--ink);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #1a1a1a;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(10,10,10,0.2);
-        }
-
-        .btn-secondary {
-            background: white;
-            color: var(--ink);
-            border: 1.5px solid var(--border-dark);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--ink);
-            transform: translateY(-1px);
-        }
-
-        .btn-green {
-            background: var(--green-mid);
-            color: white;
-        }
-
-        .btn-green:hover {
-            background: var(--green);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(45,150,96,0.25);
-        }
-
-        .btn-amber {
-            background: var(--amber);
-            color: white;
-        }
-
-        .btn-amber:hover { background: #B45309; transform: translateY(-1px); }
-
-        .btn-full { width: 100%; flex: none; }
-
-        /* ── CALL LINK ── */
-        .call-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 14px;
-            background: #1A1A1A;
-            color: white;
-            border-radius: var(--r-sm);
-            font-size: 15px;
-            font-weight: 600;
-            text-decoration: none;
-            margin-top: 14px;
-            transition: all 0.2s;
-        }
-
-        .call-link:hover { background: var(--ink); transform: translateY(-1px); }
-
-        /* ── TICKET FORM ── */
-        textarea.input {
-            min-height: 110px;
-            resize: vertical;
-            font-family: 'Sora', sans-serif;
-            line-height: 1.5;
-        }
-
-        /* ── MODAL ── */
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(10,10,10,0.55);
-            backdrop-filter: blur(6px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-
-        .overlay.show { display: flex; animation: fadeIn 0.25s; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .modal {
-            background: var(--card);
-            border-radius: var(--r);
-            padding: 32px 28px;
-            max-width: 420px;
-            width: 100%;
-            box-shadow: var(--shadow-lg);
-            text-align: center;
-            animation: rise 0.3s;
-        }
-
-        .modal h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
-        .modal p { font-size: 14px; color: var(--muted); margin-bottom: 18px; line-height: 1.6; }
-
-        .modal-detail-block {
-            background: var(--paper);
-            border-radius: var(--r-sm);
-            padding: 16px;
-            margin: 16px 0;
-            text-align: left;
-        }
-
-        .modal-detail-block p {
-            font-size: 14px;
-            color: var(--ink);
-            margin-bottom: 6px;
-            line-height: 1.5;
-        }
-
-        .modal-detail-block p:last-child { margin-bottom: 0; }
-
-        /* ── PASSWORD BOX ── */
-        #passwordModal .modal h2 {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-
-        .pwd-input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1.5px solid var(--border-dark);
-            border-radius: var(--r-sm);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 20px;
-            text-align: center;
-            letter-spacing: 4px;
-            background: white;
-            transition: border-color 0.2s;
-            margin-bottom: 10px;
-        }
-
-        .pwd-input:focus {
-            outline: none;
-            border-color: var(--green-mid);
-            box-shadow: 0 0 0 3px rgba(45,150,96,0.12);
-        }
-
-        .pwd-error {
-            font-size: 13px;
-            color: var(--red);
-            min-height: 18px;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-
-        /* ── ADMIN PANEL ── */
-        #adminPanel {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: var(--paper);
-            z-index: 500;
-            overflow-y: auto;
-        }
-
-        #adminPanel.show { display: block; }
-
-        .admin-header {
-            background: var(--ink);
-            color: white;
-            padding: 20px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .admin-header h1 { font-size: 20px; font-weight: 700; }
-
-        .admin-body { padding: 24px; max-width: 960px; margin: 0 auto; }
-
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
-            margin-bottom: 24px;
-        }
-
-        @media (max-width: 600px) {
-            .stats-row { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        .stat {
-            background: var(--card);
-            border: 1.5px solid var(--border);
-            border-radius: var(--r-sm);
-            padding: 18px;
-            text-align: center;
-        }
-
-        .stat-n { font-size: 28px; font-weight: 800; color: var(--green-mid); }
-        .stat-l { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 600; letter-spacing: 0.3px; }
-
-        .table-wrap {
-            background: var(--card);
-            border: 1.5px solid var(--border);
-            border-radius: var(--r-sm);
-            overflow: auto;
-            max-height: 460px;
-            margin-bottom: 20px;
-        }
-
-        table { width: 100%; border-collapse: collapse; min-width: 720px; }
-        th {
-            background: white;
-            padding: 14px 16px;
-            text-align: left;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--muted);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            border-bottom: 1.5px solid var(--border);
-            position: sticky; top: 0; z-index: 5;
-        }
-
-        td {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border);
-            font-size: 14px;
-            color: var(--ink);
-        }
-
-        tr:hover td { background: rgba(45,150,96,0.04); }
-
-        .status-pill {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            display: inline-block;
-        }
-
-        .s-pending { background: var(--amber-light); color: #92400E; }
-        .s-verified { background: var(--green-light); color: var(--green); }
-
-        .verify-btn {
-            background: var(--green-mid);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 7px;
-            font-family: 'Sora', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .verify-btn:hover { background: var(--green); }
-        .verify-btn:disabled { background: var(--border-dark); color: var(--muted); cursor: default; }
-
-        /* ── TOAST ── */
-        #toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-width: 340px;
-        }
-
-        .toast {
-            background: var(--ink);
-            color: white;
-            padding: 12px 18px;
-            border-radius: var(--r-sm);
-            font-size: 14px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: var(--shadow-lg);
-            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .toast.success { border-left: 3px solid var(--green-mid); }
-        .toast.error { border-left: 3px solid var(--red); }
-        .toast.info { border-left: 3px solid #3B82F6; }
-
-        @keyframes slideIn {
-            from { transform: translateX(110%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-6px); }
-            40%, 80% { transform: translateX(6px); }
-        }
-
-        .shake { animation: shake 0.4s ease; }
-
-        /* ── FOOTER ── */
-        .footer {
-            text-align: center;
-            font-size: 12px;
-            color: var(--muted);
-            padding-top: 20px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CASHY — টাকা পাঠান</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════════
+   RESET & TOKENS
+═══════════════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+:root {
+  --ink:      #111010;
+  --paper:    #F7F4EE;
+  --card:     #FEFCF8;
+  --green:    #1A6B47;
+  --green2:   #2D9660;
+  --green3:   #E4F5EC;
+  --amber:    #B85C00;
+  --amber2:   #FEF3DC;
+  --red:      #C0392B;
+  --red2:     #FDECEA;
+  --muted:    #6B6760;
+  --border:   #E0DBD2;
+  --border2:  #C8C2B8;
+  --mono:     'JetBrains Mono', monospace;
+  --font:     'Hind Siliguri', sans-serif;
+  --r:        14px;
+  --rs:       9px;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 16px 12px 80px;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.hidden { display: none !important; }
+
+/* ═══════════════════════════════════════════════
+   SHELL
+═══════════════════════════════════════════════ */
+.shell {
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════ */
+.hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 24px 0 18px;
+}
+
+.logo-wrap { line-height: 1; }
+.logo { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+.logo b { color: var(--green2); font-weight: 700; }
+.logo-tag { font-size: 11px; color: var(--muted); margin-top: 3px; letter-spacing: 0.3px; }
+
+.hdr-right { display: flex; gap: 8px; align-items: center; }
+
+/* Language toggle */
+.lang-btn {
+  background: var(--card);
+  border: 1.5px solid var(--border2);
+  border-radius: 8px;
+  padding: 7px 13px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--ink);
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lang-btn:hover { border-color: var(--green2); background: var(--green3); }
+
+/* Online dot */
+.status-dot {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--green);
+  font-weight: 600;
+  background: var(--green3);
+  border: 1.5px solid #A7D7BB;
+  padding: 6px 11px;
+  border-radius: 20px;
+}
+.dot { width: 7px; height: 7px; background: var(--green2); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.85)} }
+
+.admin-btn {
+  background: none;
+  border: 1.5px solid var(--border2);
+  border-radius: 8px;
+  padding: 7px 13px;
+  font-family: var(--font);
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.18s;
+}
+.admin-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ═══════════════════════════════════════════════
+   CARD
+═══════════════════════════════════════════════ */
+.card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 28px 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+@media(max-width:400px) { .card { padding: 22px 16px; } }
+
+/* ═══════════════════════════════════════════════
+   STEPS
+═══════════════════════════════════════════════ */
+.step { display: none; animation: rise .32s cubic-bezier(.4,0,.2,1); }
+.step.active { display: block; }
+@keyframes rise { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+/* Progress pills */
+.progress { display: flex; gap: 5px; margin-bottom: 22px; }
+.pip { height: 5px; border-radius: 3px; background: var(--border); flex: 1; transition: all .3s; }
+.pip.done { background: #A7D7BB; }
+.pip.active { background: var(--green2); }
+
+/* Step headings */
+.step-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.step-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+
+/* ═══════════════════════════════════════════════
+   QUICK-SEND (saved contacts)
+═══════════════════════════════════════════════ */
+.quick-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.quick-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.quick-row::-webkit-scrollbar { display: none; }
+.quick-chip {
+  flex-shrink: 0;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 30px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.quick-chip:hover { border-color: var(--green2); background: var(--green3); }
+.quick-chip.add-chip { color: var(--muted); font-weight: 500; }
+.quick-avatar {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--green3);
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.quick-section { margin-bottom: 24px; }
+
+/* ═══════════════════════════════════════════════
+   FORM FIELDS
+═══════════════════════════════════════════════ */
+.field { margin-bottom: 18px; }
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 7px;
+  color: var(--ink);
+}
+.input {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1.5px solid var(--border2);
+  border-radius: var(--rs);
+  font-family: var(--font);
+  font-size: 16px;
+  color: var(--ink);
+  background: white;
+  transition: border-color .18s, box-shadow .18s;
+  -webkit-appearance: none;
+}
+.input:focus { outline: none; border-color: var(--green2); box-shadow: 0 0 0 3px rgba(45,150,96,.12); }
+.input::placeholder { color: var(--muted); opacity: .65; }
+.ferr { font-size: 12px; color: var(--red); margin-top: 5px; display: none; }
+.ferr.show { display: block; }
+
+/* Platform grid */
+.plat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
+.pill {
+  border: 1.5px solid var(--border2);
+  border-radius: var(--rs);
+  padding: 13px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .18s;
+  background: white;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  user-select: none;
+}
+.pill:hover { border-color: var(--green2); background: var(--green3); }
+.pill.selected { border-color: var(--green2); background: var(--green3); box-shadow: 0 0 0 2px rgba(45,150,96,.18); }
+
+.pill-logo { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; letter-spacing: -0.5px; }
+.logo-bkash  { background: #fce4ef; color: #E2136E; }
+.logo-nagad  { background: #fff3cc; color: #E07B00; }
+.logo-rocket { background: #ede9f8; color: #6B46C1; }
+
+.pill-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+
+/* Amount */
+.amt-wrap { position: relative; }
+.amt-prefix {
+  position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 22px; font-weight: 700; color: var(--ink);
+  pointer-events: none;
+}
+#amount { padding-left: 40px; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+
+/* Breakdown */
+.breakdown {
+  background: var(--green3);
+  border: 1.5px solid #A7D7BB;
+  border-radius: var(--rs);
+  padding: 14px 16px;
+  margin: 16px 0;
+  display: none;
+}
+.breakdown.show { display: block; }
+.brow { display: flex; justify-content: space-between; font-size: 14px; color: var(--green); padding: 4px 0; }
+.brow.total { border-top: 1px solid #A7D7BB; margin-top: 7px; padding-top: 11px; font-size: 17px; font-weight: 700; }
+
+/* Savings badge */
+.savings-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--amber2); color: var(--amber);
+  border-radius: 20px; padding: 5px 12px;
+  font-size: 13px; font-weight: 600;
+  margin-top: 10px;
+}
+
+/* ═══════════════════════════════════════════════
+   CONFIRM BLOCK
+═══════════════════════════════════════════════ */
+.confirm-block {
+  border: 1.5px solid var(--border);
+  border-radius: var(--rs);
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.crow {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.crow:last-child { border-bottom: none; }
+.clabel { color: var(--muted); font-weight: 500; }
+.cval { font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 7px; }
+.badge {
+  font-size: 12px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+  background: var(--green3); color: var(--green);
+}
+
+/* ═══════════════════════════════════════════════
+   PAYMENT BOXES
+═══════════════════════════════════════════════ */
+.pay-dark {
+  background: var(--ink);
+  border-radius: var(--rs);
+  padding: 20px;
+  text-align: center;
+  margin: 18px 0 10px;
+}
+.pay-dark-lbl { font-size: 11px; color: rgba(255,255,255,.5); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 6px; }
+.pay-dark-num { font-family: var(--mono); font-size: 24px; font-weight: 600; color: white; letter-spacing: 1px; }
+
+.pay-green {
+  background: var(--green2);
+  border-radius: var(--rs);
+  padding: 18px;
+  text-align: center;
+  margin-bottom: 18px;
+}
+.pay-green-lbl { font-size: 11px; color: rgba(255,255,255,.7); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 6px; }
+.pay-green-val { font-size: 30px; font-weight: 700; color: white; letter-spacing: -0.5px; }
+
+/* How-to steps */
+.how-to {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rs);
+  padding: 15px 17px;
+  margin-bottom: 16px;
+}
+.how-to h4 { font-size: 14px; font-weight: 700; margin-bottom: 11px; }
+.how-to ol { padding-left: 18px; }
+.how-to li { font-size: 14px; color: var(--muted); margin-bottom: 7px; line-height: 1.5; }
+
+.trx-box {
+  border: 2px dashed var(--border2);
+  border-radius: var(--rs);
+  padding: 15px;
+  text-align: center;
+  margin-top: 16px;
+}
+.trx-lbl { font-size: 11px; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 5px; }
+.trx-val { font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--green2); letter-spacing: 1.5px; }
+.trx-hint { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.4; }
+
+/* ETA badge */
+.eta-badge {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--amber2); border: 1.5px solid #FBCF87;
+  border-radius: var(--rs); padding: 11px 14px;
+  font-size: 14px; color: var(--amber); font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* ═══════════════════════════════════════════════
+   ALERTS
+═══════════════════════════════════════════════ */
+.alert {
+  display: flex; gap: 11px;
+  padding: 13px 15px;
+  border-radius: var(--rs);
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  align-items: flex-start;
+}
+.alert i { flex-shrink: 0; margin-top: 1px; font-size: 15px; }
+.alert-amber { background: var(--amber2); border: 1.5px solid #FBCF87; color: var(--amber); }
+.alert-green  { background: var(--green3); border: 1.5px solid #A7D7BB; color: var(--green); }
+.alert-red    { background: var(--red2);   border: 1.5px solid #F5AEAD; color: var(--red); }
+
+/* ═══════════════════════════════════════════════
+   LOADER
+═══════════════════════════════════════════════ */
+.loader-wrap { text-align: center; padding: 20px 0 14px; }
+.spinner {
+  width: 48px; height: 48px;
+  border: 3px solid var(--border);
+  border-top-color: var(--green2);
+  border-radius: 50%;
+  animation: spin .85s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+.loader-text { font-size: 14px; color: var(--muted); }
+
+/* ═══════════════════════════════════════════════
+   VIDEO
+═══════════════════════════════════════════════ */
+.video-wrap {
+  border-radius: var(--rs);
+  overflow: hidden;
+  margin: 14px 0;
+  border: 1.5px solid var(--border);
+}
+.video-wrap iframe { width: 100%; height: 210px; display: block; border: none; }
+
+/* ═══════════════════════════════════════════════
+   SUCCESS
+═══════════════════════════════════════════════ */
+.success-wrap { text-align: center; padding: 10px 0; }
+.success-ico {
+  width: 80px; height: 80px;
+  background: var(--green3);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 18px;
+  color: var(--green2); font-size: 38px;
+  animation: popIn .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+
+/* Rating */
+.rating-wrap { margin: 18px 0 4px; }
+.rating-label { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+.rating-btns { display: flex; gap: 10px; justify-content: center; }
+.rating-btn {
+  flex: 1; max-width: 120px;
+  padding: 12px;
+  border: 1.5px solid var(--border2);
+  border-radius: var(--rs);
+  background: white;
+  font-family: var(--font);
+  font-size: 22px;
+  cursor: pointer;
+  transition: all .18s;
+}
+.rating-btn:hover { transform: scale(1.05); }
+.rating-btn.good:hover  { border-color: var(--green2); background: var(--green3); }
+.rating-btn.bad:hover   { border-color: var(--red);    background: var(--red2); }
+.rating-btn.selected-good { border-color: var(--green2); background: var(--green3); }
+.rating-btn.selected-bad  { border-color: var(--red);    background: var(--red2); }
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════ */
+.btn-row { display: flex; gap: 9px; margin-top: 22px; }
+.btn {
+  flex: 1;
+  padding: 14px 18px;
+  border: none;
+  border-radius: var(--rs);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .18s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  text-decoration: none;
+  -webkit-appearance: none;
+}
+.btn-primary { background: var(--ink); color: white; }
+.btn-primary:hover { background: #1a1a1a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+.btn-secondary { background: white; color: var(--ink); border: 1.5px solid var(--border2); }
+.btn-secondary:hover { border-color: var(--ink); transform: translateY(-1px); }
+.btn-green { background: var(--green2); color: white; }
+.btn-green:hover { background: var(--green); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(45,150,96,.25); }
+.btn-amber { background: var(--amber); color: white; }
+.btn-amber:hover { background: #9A4D00; transform: translateY(-1px); }
+.btn-full { width: 100%; flex: none; }
+
+.call-link {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 13px; background: var(--ink); color: white;
+  border-radius: var(--rs); font-size: 14px; font-weight: 600;
+  text-decoration: none; margin-top: 12px; transition: all .18s;
+}
+.call-link:hover { background: #1a1a1a; transform: translateY(-1px); }
+
+/* Icon button (back arrow only) */
+.btn-icon {
+  flex: none; width: 48px; height: 48px;
+  border: 1.5px solid var(--border2);
+  border-radius: var(--rs);
+  background: white; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--ink);
+  transition: all .18s; flex-shrink: 0;
+}
+.btn-icon:hover { border-color: var(--ink); }
+
+/* ═══════════════════════════════════════════════
+   OPERATING HOURS BANNER
+═══════════════════════════════════════════════ */
+.hours-bar {
+  background: var(--green3);
+  border: 1.5px solid #A7D7BB;
+  border-radius: var(--rs);
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════════ */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(10,10,10,.55);
+  backdrop-filter: blur(5px);
+  display: none; justify-content: center; align-items: center;
+  z-index: 1000; padding: 18px;
+}
+.overlay.show { display: flex; animation: fadeIn .22s; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.modal {
+  background: var(--card);
+  border-radius: var(--r);
+  padding: 28px 24px;
+  max-width: 420px; width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  animation: rise .28s;
+}
+.modal h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.modal p { font-size: 14px; color: var(--muted); margin-bottom: 16px; line-height: 1.6; }
+.modal-det {
+  background: var(--paper); border-radius: var(--rs);
+  padding: 14px; margin: 14px 0;
+}
+.modal-det p { font-size: 14px; color: var(--ink); margin-bottom: 5px; line-height: 1.5; }
+.modal-det p:last-child { margin-bottom: 0; }
+
+.modal-ico {
+  width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; font-size: 34px;
+}
+.ico-green { background: var(--green3); color: var(--green2); }
+.ico-amber { background: var(--amber2); color: var(--amber); }
+
+/* Password modal */
+.pwd-input {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1.5px solid var(--border2);
+  border-radius: var(--rs);
+  font-family: var(--mono); font-size: 20px;
+  text-align: center; letter-spacing: 4px;
+  background: white; margin-bottom: 9px;
+  transition: border-color .18s;
+}
+.pwd-input:focus { outline: none; border-color: var(--green2); box-shadow: 0 0 0 3px rgba(45,150,96,.12); }
+.pwd-err { font-size: 13px; color: var(--red); min-height: 18px; margin-bottom: 9px; font-weight: 500; }
+
+/* ═══════════════════════════════════════════════
+   ADMIN PANEL
+═══════════════════════════════════════════════ */
+#adminPanel {
+  display: none; position: fixed; inset: 0;
+  background: var(--paper); z-index: 500; overflow-y: auto;
+}
+#adminPanel.show { display: block; }
+.adm-hdr {
+  background: var(--ink); color: white;
+  padding: 18px 22px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.adm-hdr h1 { font-size: 19px; font-weight: 700; }
+.adm-body { padding: 22px; max-width: 960px; margin: 0 auto; }
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 22px; }
+@media(max-width:580px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
+.stat-card {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: var(--rs); padding: 16px; text-align: center;
+}
+.stat-n { font-size: 26px; font-weight: 700; color: var(--green2); }
+.stat-l { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 600; }
+.tbl-wrap {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: var(--rs); overflow: auto;
+  max-height: 460px; margin-bottom: 18px;
+}
+table { width: 100%; border-collapse: collapse; min-width: 700px; }
+th {
+  background: white; padding: 13px 15px;
+  text-align: left; font-size: 12px; font-weight: 700;
+  color: var(--muted); letter-spacing: .5px; text-transform: uppercase;
+  border-bottom: 1.5px solid var(--border); position: sticky; top: 0; z-index: 5;
+}
+td { padding: 13px 15px; border-bottom: 1px solid var(--border); font-size: 14px; }
+tr:hover td { background: rgba(45,150,96,.04); }
+.sp { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; }
+.sp-pending  { background: var(--amber2); color: var(--amber); }
+.sp-verified { background: var(--green3); color: var(--green); }
+.vfy-btn {
+  background: var(--green2); color: white; border: none;
+  padding: 7px 14px; border-radius: 7px;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .18s;
+}
+.vfy-btn:hover { background: var(--green); }
+.vfy-btn:disabled { background: var(--border2); color: var(--muted); cursor: default; }
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+#toasts {
+  position: fixed; top: 16px; right: 16px;
+  z-index: 9999; display: flex; flex-direction: column;
+  gap: 8px; max-width: 320px; pointer-events: none;
+}
+.toast {
+  background: var(--ink); color: white;
+  padding: 11px 16px; border-radius: var(--rs);
+  font-size: 14px; font-weight: 500;
+  display: flex; align-items: center; gap: 9px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  animation: slideIn .28s cubic-bezier(.4,0,.2,1);
+  pointer-events: all;
+}
+.toast.success { border-left: 3px solid var(--green2); }
+.toast.error   { border-left: 3px solid var(--red); }
+.toast.info    { border-left: 3px solid #3B82F6; }
+@keyframes slideIn { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
+.shake { animation: shake .4s ease; }
+
+/* ═══════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════ */
+.footer { text-align: center; font-size: 12px; color: var(--muted); padding-top: 18px; }
+</style>
 </head>
 <body>
 
-<div id="toast-container"></div>
+<div id="toasts"></div>
 
-<!-- ── MAIN APP ── -->
+<!-- ═══════════════════════ MAIN APP ═══════════════════════ -->
 <div class="shell" id="mainApp">
 
-    <div class="header">
-        <div>
-            <div class="logo">CASH<span>Y</span></div>
-            <div class="logo-sub">by MAVEN technologies</div>
+  <div class="hdr">
+    <div class="logo-wrap">
+      <div class="logo">CASH<b>Y</b></div>
+      <div class="logo-tag" id="logoTag">by MAVEN technologies</div>
+    </div>
+    <div class="hdr-right">
+      <button class="lang-btn" onclick="toggleLang()" id="langBtn">বাংলা</button>
+      <div class="status-dot"><div class="dot"></div><span id="statusTxt">Online</span></div>
+      <button class="admin-btn" onclick="showPwdModal()"><i class="fas fa-lock"></i></button>
+    </div>
+  </div>
+
+  <div class="card">
+
+    <!-- ── STEP 1: RECEIVER ── -->
+    <div id="step1" class="step active">
+      <div class="progress">
+        <div class="pip active" id="p1a"></div>
+        <div class="pip" id="p2a"></div>
+        <div class="pip" id="p3a"></div>
+      </div>
+
+      <!-- Operating hours -->
+      <div class="hours-bar" id="hoursBar">
+        <i class="fas fa-clock"></i>
+        <span id="hoursTxt">Active: 8 AM – 10 PM daily</span>
+      </div>
+
+      <!-- Quick send (saved contacts) -->
+      <div class="quick-section" id="quickSection" style="display:none;">
+        <div class="quick-label" id="ql_label">Recent</div>
+        <div class="quick-row" id="quickRow"></div>
+      </div>
+
+      <div class="step-title" id="t1_title">Send Money</div>
+      <div class="step-sub" id="t1_sub">Enter the receiver's details below.</div>
+
+      <div class="field">
+        <label id="l_recv">Receiver's Number</label>
+        <input type="tel" id="recipientPhone" class="input" placeholder="01XXXXXXXXX" maxlength="11" inputmode="numeric">
+        <div class="ferr" id="e_recv">Please enter a valid 11-digit number starting with 01.</div>
+      </div>
+
+      <div class="field">
+        <label id="l_rplat">Receiver's Platform</label>
+        <div class="plat-grid">
+          <div class="pill" data-platform="bkash"  data-type="receiver" onclick="selectPill(this)">
+            <div class="pill-logo logo-bkash">bK</div>
+            <span class="pill-name">bKash</span>
+          </div>
+          <div class="pill" data-platform="nagad"  data-type="receiver" onclick="selectPill(this)">
+            <div class="pill-logo logo-nagad">Ng</div>
+            <span class="pill-name">Nagad</span>
+          </div>
+          <div class="pill" data-platform="rocket" data-type="receiver" onclick="selectPill(this)">
+            <div class="pill-logo logo-rocket">Rk</div>
+            <span class="pill-name">Rocket</span>
+          </div>
         </div>
-        <button class="admin-trigger" onclick="showPasswordModal()">
-            <i class="fas fa-lock"></i> Admin
+        <div class="ferr" id="e_rplat">Please select the receiver's platform.</div>
+      </div>
+
+      <div class="field">
+        <label id="l_splat">Your Platform (sending from)</label>
+        <div class="plat-grid">
+          <div class="pill" data-platform="bkash"  data-type="sender" onclick="selectPill(this)">
+            <div class="pill-logo logo-bkash">bK</div>
+            <span class="pill-name">bKash</span>
+          </div>
+          <div class="pill" data-platform="nagad"  data-type="sender" onclick="selectPill(this)">
+            <div class="pill-logo logo-nagad">Ng</div>
+            <span class="pill-name">Nagad</span>
+          </div>
+          <div class="pill" data-platform="rocket" data-type="sender" onclick="selectPill(this)">
+            <div class="pill-logo logo-rocket">Rk</div>
+            <span class="pill-name">Rocket</span>
+          </div>
+        </div>
+        <div class="ferr" id="e_splat">Please select your sending platform.</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary btn-full" onclick="validateStep1()">
+          <span id="btn1_txt">Continue</span> <i class="fas fa-arrow-right"></i>
         </button>
+      </div>
     </div>
 
-    <div class="card">
+    <!-- ── STEP 2: AMOUNT ── -->
+    <div id="step2" class="step">
+      <div class="progress">
+        <div class="pip done"></div>
+        <div class="pip active"></div>
+        <div class="pip"></div>
+      </div>
 
-        <!-- ── STEP 1: RECEIVER & PLATFORM ── -->
-        <div id="step1" class="step active">
-            <div class="progress">
-                <div class="progress-dot active" id="dot1"></div>
-                <div class="progress-dot" id="dot2"></div>
-                <div class="progress-dot" id="dot3"></div>
-            </div>
+      <div class="step-title" id="t2_title">How much?</div>
+      <div class="step-sub" id="t2_sub">Receiver gets the full amount — fee is added on top.</div>
 
-            <div class="card-title">Send Money</div>
-            <div class="card-sub">Enter the receiver's details to get started.</div>
-
-            <div class="field">
-                <label>Receiver's Mobile Number</label>
-                <input type="tel" id="recipientPhone" class="input" placeholder="01XXXXXXXXX" maxlength="11" inputmode="numeric">
-                <div class="field-error" id="recipientPhoneError">Please enter a valid 11-digit number starting with 01.</div>
-            </div>
-
-            <div class="field">
-                <label>Receiver's Platform</label>
-                <div class="platform-grid">
-                    <div class="pill" data-platform="bkash" data-type="receiver">
-                        <div class="pill-icon bkash-icon"><i class="fas fa-mobile-alt"></i></div>
-                        <span class="pill-name">bKash</span>
-                    </div>
-                    <div class="pill" data-platform="nagad" data-type="receiver">
-                        <div class="pill-icon nagad-icon"><i class="fas fa-wallet"></i></div>
-                        <span class="pill-name">Nagad</span>
-                    </div>
-                    <div class="pill" data-platform="rocket" data-type="receiver">
-                        <div class="pill-icon rocket-icon"><i class="fas fa-rocket"></i></div>
-                        <span class="pill-name">Rocket</span>
-                    </div>
-                </div>
-                <div class="field-error" id="receiverPlatformError">Please select the receiver's platform.</div>
-            </div>
-
-            <div class="field">
-                <label>Your Sending Platform</label>
-                <div class="platform-grid">
-                    <div class="pill" data-platform="bkash" data-type="sender">
-                        <div class="pill-icon bkash-icon"><i class="fas fa-mobile-alt"></i></div>
-                        <span class="pill-name">bKash</span>
-                    </div>
-                    <div class="pill" data-platform="nagad" data-type="sender">
-                        <div class="pill-icon nagad-icon"><i class="fas fa-wallet"></i></div>
-                        <span class="pill-name">Nagad</span>
-                    </div>
-                    <div class="pill" data-platform="rocket" data-type="sender">
-                        <div class="pill-icon rocket-icon"><i class="fas fa-rocket"></i></div>
-                        <span class="pill-name">Rocket</span>
-                    </div>
-                </div>
-                <div class="field-error" id="senderPlatformError">Please select your sending platform.</div>
-            </div>
-
-            <div class="btn-row">
-                <button class="btn btn-primary btn-full" onclick="validateStep1()">
-                    Continue <i class="fas fa-arrow-right"></i>
-                </button>
-            </div>
+      <div class="confirm-block">
+        <div class="crow">
+          <span class="clabel" id="l_sendto">Sending to</span>
+          <span class="cval"><span id="s2Phone">—</span> <span id="s2RBadge" class="badge">—</span></span>
         </div>
-
-        <!-- ── STEP 2: AMOUNT ── -->
-        <div id="step2" class="step">
-            <div class="progress">
-                <div class="progress-dot done" id="dot1b"></div>
-                <div class="progress-dot active" id="dot2b"></div>
-                <div class="progress-dot" id="dot3b"></div>
-            </div>
-
-            <div class="card-title">How much?</div>
-            <div class="card-sub">Enter the amount to send. The receiver gets the full amount.</div>
-
-            <div class="confirm-block" style="margin-bottom:20px;">
-                <div class="confirm-row">
-                    <span class="confirm-label">Sending to</span>
-                    <span class="confirm-val">
-                        <span id="s2ReceiverPhone">—</span>
-                        <span id="s2ReceiverBadge" class="badge">—</span>
-                    </span>
-                </div>
-                <div class="confirm-row">
-                    <span class="confirm-label">Via your</span>
-                    <span class="confirm-val"><span id="s2SenderBadge" class="badge">—</span></span>
-                </div>
-            </div>
-
-            <div class="field">
-                <label>Amount (BDT)</label>
-                <div class="amount-wrap">
-                    <span class="amount-prefix">৳</span>
-                    <input type="number" id="amount" class="input" placeholder="0" min="10" max="50000" inputmode="decimal">
-                </div>
-                <div class="field-error" id="amountError">Enter an amount between ৳10 and ৳50,000.</div>
-            </div>
-
-            <div class="breakdown" id="breakdownBox" style="display:none;">
-                <div class="breakdown-row">
-                    <span>Transfer amount</span>
-                    <span id="bAmount">—</span>
-                </div>
-                <div class="breakdown-row">
-                    <span>Service fee (1.05%)</span>
-                    <span id="bFee">—</span>
-                </div>
-                <div class="breakdown-row total">
-                    <span>You pay total</span>
-                    <span id="bTotal">—</span>
-                </div>
-            </div>
-
-            <div class="alert alert-green">
-                <i class="fas fa-info-circle"></i>
-                <span>The receiver gets the full transfer amount. Only a small 1.05% service fee is added on top.</span>
-            </div>
-
-            <div class="btn-row">
-                <button class="btn btn-secondary" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i></button>
-                <button class="btn btn-primary" onclick="validateAmount()">
-                    Review & Pay <i class="fas fa-arrow-right"></i>
-                </button>
-            </div>
+        <div class="crow">
+          <span class="clabel" id="l_via">Via your</span>
+          <span class="cval"><span id="s2SBadge" class="badge">—</span></span>
         </div>
+      </div>
 
-        <!-- ── STEP 3: PAYMENT INSTRUCTIONS ── -->
-        <div id="step3" class="step">
-            <div class="progress">
-                <div class="progress-dot done"></div>
-                <div class="progress-dot done"></div>
-                <div class="progress-dot active"></div>
-            </div>
-
-            <div class="card-title">Now Send Payment</div>
-            <div class="card-sub">Send the exact amount below to our agent number using <strong id="s3Platform">—</strong>.</div>
-
-            <div class="pay-box">
-                <div class="pay-box-label">Agent Number (CASHY)</div>
-                <div class="pay-number" id="s3AgentNum">01716900948</div>
-            </div>
-
-            <div class="pay-amount-box">
-                <div class="pay-amount-label">Exact Amount to Send</div>
-                <div class="pay-amount-val" id="s3Total">—</div>
-            </div>
-
-            <div class="steps-list">
-                <h4>How to send via <span id="s3PlatformName">your app</span></h4>
-                <ol id="s3Steps">
-                    <li>Open your app and tap <strong>Send Money</strong></li>
-                    <li>Enter the agent number shown above</li>
-                    <li>Enter the <strong>exact amount</strong> shown above</li>
-                    <li>Complete with your PIN</li>
-                    <li>Note down your Transaction ID from the confirmation SMS</li>
-                </ol>
-            </div>
-
-            <div class="trx-id-box">
-                <div class="trx-id-label">Your CASHY Reference ID</div>
-                <div class="trx-id-val" id="s3TrxId">—</div>
-                <div class="trx-id-hint">Save this. Our team will use it to verify your payment.</div>
-            </div>
-
-            <div class="btn-row">
-                <button class="btn btn-secondary" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i></button>
-                <button class="btn btn-green" onclick="confirmPayment()">
-                    <i class="fas fa-check"></i> I've Sent the Money
-                </button>
-            </div>
+      <div class="field">
+        <label id="l_amt">Amount (BDT)</label>
+        <div class="amt-wrap">
+          <span class="amt-prefix">৳</span>
+          <input type="number" id="amount" class="input" placeholder="0" min="10" max="50000" inputmode="decimal">
         </div>
+        <div class="ferr" id="e_amt">Enter an amount between ৳10 and ৳50,000.</div>
+      </div>
 
-        <!-- ── STEP 4: WAITING / VERIFICATION ── -->
-        <div id="step4" class="step">
-            <div class="card-title">Verifying Payment</div>
-            <div class="card-sub">Sit tight — our operator is checking your transaction right now.</div>
+      <div class="breakdown" id="breakdownBox">
+        <div class="brow"><span id="bl_transfer">Transfer amount</span><span id="bAmount">—</span></div>
+        <div class="brow"><span id="bl_fee">Service fee (1.05%)</span><span id="bFee">—</span></div>
+        <div class="brow total"><span id="bl_total">You pay total</span><span id="bTotal">—</span></div>
+      </div>
 
-            <div class="alert alert-amber">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span>Do <strong>not</strong> close this tab. Verification usually takes under 5 minutes.</span>
-            </div>
-
-            <div class="video-wrap">
-                <iframe id="waitingVideo"
-                    src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1&controls=1&rel=0&modestbranding=1"
-                    title="Chill Music"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen></iframe>
-            </div>
-
-            <div class="loader-wrap">
-                <div class="spinner"></div>
-                <p class="loader-text">Verifying your transaction…</p>
-            </div>
-
-            <div class="confirm-block">
-                <div class="confirm-row">
-                    <span class="confirm-label">Reference ID</span>
-                    <span class="confirm-val"><code id="v4TrxId">—</code></span>
-                </div>
-                <div class="confirm-row">
-                    <span class="confirm-label">Transfer Amount</span>
-                    <span class="confirm-val" id="v4Amount">—</span>
-                </div>
-                <div class="confirm-row">
-                    <span class="confirm-label">Service Fee</span>
-                    <span class="confirm-val" id="v4Fee">—</span>
-                </div>
-                <div class="confirm-row">
-                    <span class="confirm-label">Total You Paid</span>
-                    <span class="confirm-val" id="v4Total">—</span>
-                </div>
-            </div>
-
-            <a href="tel:+8801716900948" class="call-link">
-                <i class="fas fa-phone-alt"></i> Urgent: Call +880 1716 900948
-            </a>
-
-            <div class="btn-row" style="margin-top:16px;">
-                <button class="btn btn-secondary" onclick="goToStep(5)">
-                    <i class="fas fa-life-ring"></i> Need Help
-                </button>
-                <button class="btn btn-primary" onclick="checkVerificationStatus()">
-                    <i class="fas fa-sync-alt"></i> Check Status
-                </button>
-            </div>
+      <!-- Savings vs direct fee -->
+      <div id="savingsBox" style="display:none;">
+        <div class="savings-badge">
+          <i class="fas fa-tag"></i>
+          <span id="savingsTxt">You save ৳X vs bKash direct</span>
         </div>
+      </div>
 
-        <!-- ── STEP 5: SUPPORT TICKET ── -->
-        <div id="step5" class="step">
-            <div class="card-title">Submit a Ticket</div>
-            <div class="card-sub">Facing a delay or issue? Tell us and we'll contact you right away.</div>
+      <div class="btn-row">
+        <button class="btn-icon" onclick="goTo(1)"><i class="fas fa-arrow-left"></i></button>
+        <button class="btn btn-primary" onclick="validateAmount()" style="flex:1;">
+          <span id="btn2_txt">Review & Pay</span> <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
 
-            <div class="field">
-                <label>Your Phone Number (for callback)</label>
-                <input type="tel" id="ticketPhone" class="input" placeholder="01XXXXXXXXX" maxlength="11" inputmode="numeric">
-            </div>
+    <!-- ── STEP 3: PAYMENT INSTRUCTIONS ── -->
+    <div id="step3" class="step">
+      <div class="progress">
+        <div class="pip done"></div>
+        <div class="pip done"></div>
+        <div class="pip active"></div>
+      </div>
 
-            <div class="field">
-                <label>Describe the Issue</label>
-                <textarea id="ticketDetails" class="input" placeholder="Include your Reference ID, amount, and what went wrong…"></textarea>
-            </div>
+      <div class="step-title" id="t3_title">Send Payment</div>
+      <div class="step-sub">
+        <span id="t3_sub">Use </span><strong id="s3Platform">—</strong><span id="t3_sub2"> to send the exact amount below.</span>
+      </div>
 
-            <div class="btn-row">
-                <button class="btn btn-amber btn-full" onclick="submitTicket()">
-                    <i class="fas fa-paper-plane"></i> Submit Urgent Ticket
-                </button>
-            </div>
+      <div class="pay-dark">
+        <div class="pay-dark-lbl" id="l_agent">CASHY Agent Number</div>
+        <div class="pay-dark-num" id="s3AgentNum">01716900948</div>
+      </div>
 
-            <a href="tel:+8801716900948" class="call-link">
-                <i class="fas fa-phone-alt"></i> Or call directly: +880 1716 900948
-            </a>
+      <div class="pay-green">
+        <div class="pay-green-lbl" id="l_exact">Exact Amount to Send</div>
+        <div class="pay-green-val" id="s3Total">—</div>
+      </div>
 
-            <div class="btn-row" style="margin-top:14px;">
-                <button class="btn btn-secondary" onclick="goToStep(4)">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>
-            </div>
+      <div class="how-to">
+        <h4 id="s3HowTitle">How to send:</h4>
+        <ol id="s3Steps"></ol>
+      </div>
+
+      <div class="trx-box">
+        <div class="trx-lbl" id="l_refid">Your CASHY Reference ID</div>
+        <div class="trx-val" id="s3TrxId">—</div>
+        <div class="trx-hint" id="l_refhint">Save this. We'll use it to verify your payment.</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-icon" onclick="goTo(2)"><i class="fas fa-arrow-left"></i></button>
+        <button class="btn btn-green" onclick="confirmPayment()" style="flex:1;">
+          <i class="fas fa-check"></i> <span id="btn3_txt">I've Sent the Money</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 4: WAITING ── -->
+    <div id="step4" class="step">
+      <div class="step-title" id="t4_title">Verifying Payment</div>
+      <div class="step-sub" id="t4_sub">Our operator is checking your transaction now.</div>
+
+      <div class="eta-badge">
+        <i class="fas fa-clock"></i>
+        <span id="etaTxt">Usually ready in 3–5 minutes</span>
+      </div>
+
+      <div class="alert alert-amber">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span id="alert4_txt">Do not close this tab. Your transfer is being processed.</span>
+      </div>
+
+      <div class="video-wrap">
+        <iframe id="waitVid"
+          src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1&controls=1&rel=0&modestbranding=1"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
+      </div>
+
+      <div class="loader-wrap">
+        <div class="spinner"></div>
+        <p class="loader-text" id="l_verifying">Verifying your transaction…</p>
+      </div>
+
+      <div class="confirm-block">
+        <div class="crow"><span class="clabel" id="l_refid2">Reference ID</span><span class="cval"><code id="v4Trx">—</code></span></div>
+        <div class="crow"><span class="clabel" id="l_amt2">Transfer Amount</span><span class="cval" id="v4Amt">—</span></div>
+        <div class="crow"><span class="clabel" id="l_fee2">Service Fee</span><span class="cval" id="v4Fee">—</span></div>
+        <div class="crow"><span class="clabel" id="l_paid">Total Paid</span><span class="cval" id="v4Total">—</span></div>
+      </div>
+
+      <a href="tel:+8801716900948" class="call-link">
+        <i class="fas fa-phone-alt"></i> <span id="callTxt">Urgent: +880 1716 900948</span>
+      </a>
+
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn btn-secondary" onclick="goTo(5)">
+          <i class="fas fa-life-ring"></i> <span id="btn4a_txt">Help</span>
+        </button>
+        <button class="btn btn-primary" onclick="checkStatus()">
+          <i class="fas fa-sync-alt"></i> <span id="btn4b_txt">Check Status</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 5: SUPPORT TICKET ── -->
+    <div id="step5" class="step">
+      <div class="step-title" id="t5_title">Submit a Ticket</div>
+      <div class="step-sub" id="t5_sub">Tell us the issue and we'll call you back immediately.</div>
+
+      <div class="field">
+        <label id="l_tphone">Your Phone (for callback)</label>
+        <input type="tel" id="ticketPhone" class="input" placeholder="01XXXXXXXXX" maxlength="11" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label id="l_issue">Describe the Issue</label>
+        <textarea id="ticketDetails" class="input" style="min-height:100px;resize:vertical;" placeholder="Include your Reference ID, amount, and what happened…"></textarea>
+      </div>
+      <button class="btn btn-amber btn-full" onclick="submitTicket()">
+        <i class="fas fa-paper-plane"></i> <span id="btn5_txt">Submit Urgent Ticket</span>
+      </button>
+      <a href="tel:+8801716900948" class="call-link">
+        <i class="fas fa-phone-alt"></i> <span id="callTxt2">Or call: +880 1716 900948</span>
+      </a>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn btn-secondary btn-full" onclick="goTo(4)">
+          <i class="fas fa-arrow-left"></i> <span id="btn5b_txt">Back</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 6: SUCCESS ── -->
+    <div id="step6" class="step">
+      <div class="success-wrap">
+        <div class="success-ico"><i class="fas fa-check-circle"></i></div>
+        <div class="step-title" id="t6_title">Payment Verified!</div>
+        <div class="step-sub" id="t6_sub">The receiver has been paid. All done.</div>
+      </div>
+
+      <div class="confirm-block">
+        <div class="crow"><span class="clabel" id="l_s6ref">Reference ID</span><span class="cval"><code id="s6Trx">—</code></span></div>
+        <div class="crow"><span class="clabel" id="l_s6amt">Amount Sent</span><span class="cval" id="s6Amt">—</span></div>
+        <div class="crow"><span class="clabel" id="l_s6recv">Receiver</span><span class="cval" id="s6Recv">—</span></div>
+        <div class="crow"><span class="clabel" id="l_s6time">Completed</span><span class="cval" id="s6Time">—</span></div>
+      </div>
+
+      <!-- Rating -->
+      <div class="rating-wrap">
+        <div class="rating-label" id="rl_ask">How was your experience?</div>
+        <div class="rating-btns">
+          <button class="rating-btn good" onclick="rate('good')">👍</button>
+          <button class="rating-btn bad"  onclick="rate('bad')">👎</button>
         </div>
+      </div>
 
-        <!-- ── STEP 6: SUCCESS ── -->
-        <div id="step6" class="step" style="text-align:center; padding: 12px 0;">
-            <div class="success-icon-wrap">
-                <i class="fas fa-check-circle"></i>
-            </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="downloadReceipt()">
+          <i class="fas fa-file-pdf"></i> <span id="btn6a_txt">Receipt</span>
+        </button>
+        <button class="btn btn-green" onclick="newTransaction()">
+          <i class="fas fa-plus"></i> <span id="btn6b_txt">New Transfer</span>
+        </button>
+      </div>
+    </div>
 
-            <div class="card-title">Payment Verified!</div>
-            <div class="card-sub" style="margin-bottom:24px;">The receiver has been paid. Transaction complete.</div>
-
-            <div class="confirm-block" style="text-align:left;">
-                <div class="confirm-row">
-                    <span class="confirm-label">Reference ID</span>
-                    <span class="confirm-val"><code id="s6TrxId">—</code></span>
-                </div>
-                <div class="confirm-row">
-                    <span class="confirm-label">Amount Sent</span>
-                    <span class="confirm-val" id="s6Amount">—</span>
-                </div>
-                <div class="confirm-row">
-                    <span class="confirm-label">Receiver</span>
-                    <span class="confirm-val" id="s6Receiver">—</span>
-                </div>
-                <div class="confirm-row">
-                    <span class="confirm-label">Completed at</span>
-                    <span class="confirm-val" id="s6Time">—</span>
-                </div>
-            </div>
-
-            <div class="btn-row" style="margin-top:20px;">
-                <button class="btn btn-secondary" onclick="downloadPDFReceipt()">
-                    <i class="fas fa-file-pdf"></i> PDF Receipt
-                </button>
-                <button class="btn btn-green" onclick="startNewTransaction()">
-                    <i class="fas fa-plus"></i> New Transfer
-                </button>
-            </div>
-        </div>
-
-    </div><!-- .card -->
-
-    <div class="footer">Powered by CASHY · MAVEN technologies</div>
-
+  </div><!-- .card -->
+  <div class="footer" id="footerTxt">Powered by CASHY · MAVEN technologies</div>
 </div><!-- .shell -->
 
 
-<!-- ── ADMIN PANEL ── -->
+<!-- ═══════════════════════ ADMIN PANEL ═══════════════════════ -->
 <div id="adminPanel">
-    <div class="admin-header">
-        <h1><i class="fas fa-chart-bar"></i> Admin Panel</h1>
-        <button class="btn btn-secondary" style="flex:none; padding:10px 18px;" onclick="closeAdmin()">
-            <i class="fas fa-times"></i> Close
-        </button>
+  <div class="adm-hdr">
+    <h1>CASHY Admin</h1>
+    <button class="btn btn-secondary" style="flex:none;padding:9px 16px;font-size:13px;" onclick="closeAdmin()">
+      <i class="fas fa-times"></i> Close
+    </button>
+  </div>
+  <div class="adm-body">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-n" id="aS1">0</div><div class="stat-l">Transactions</div></div>
+      <div class="stat-card"><div class="stat-n" id="aS2">0.00</div><div class="stat-l">Total (BDT)</div></div>
+      <div class="stat-card"><div class="stat-n" id="aS3">0</div><div class="stat-l">Pending</div></div>
+      <div class="stat-card"><div class="stat-n" id="aS4">0</div><div class="stat-l">Verified</div></div>
     </div>
-    <div class="admin-body">
-        <div class="stats-row">
-            <div class="stat">
-                <div class="stat-n" id="aStat1">0</div>
-                <div class="stat-l">Total Transactions</div>
-            </div>
-            <div class="stat">
-                <div class="stat-n" id="aStat2">0.00</div>
-                <div class="stat-l">Total Amount (BDT)</div>
-            </div>
-            <div class="stat">
-                <div class="stat-n" id="aStat3">0</div>
-                <div class="stat-l">Pending</div>
-            </div>
-            <div class="stat">
-                <div class="stat-n" id="aStat4">0</div>
-                <div class="stat-l">Verified</div>
-            </div>
-        </div>
-
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Ref ID</th>
-                        <th>Receiver</th>
-                        <th>From → To</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="adminTableBody"></tbody>
-            </table>
-        </div>
-
-        <div class="btn-row">
-            <button class="btn btn-secondary" onclick="exportAllToPDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
-            <button class="btn btn-primary" onclick="refreshAdmin()"><i class="fas fa-sync-alt"></i> Refresh</button>
-        </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Ref ID</th><th>Receiver</th><th>Route</th><th>Amount</th><th>Status</th><th>Date</th><th>Action</th>
+        </tr></thead>
+        <tbody id="adminTbody"></tbody>
+      </table>
     </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+      <button class="btn btn-primary" onclick="refreshAdmin()"><i class="fas fa-sync-alt"></i> Refresh</button>
+    </div>
+  </div>
 </div>
 
 
-<!-- ── PASSWORD MODAL ── -->
-<div class="overlay" id="passwordModal">
-    <div class="modal">
-        <h3 style="margin-bottom:16px;">Admin Access</h3>
-        <input type="password" id="adminPassword" class="pwd-input" placeholder="••••••••" autocomplete="off">
-        <div class="pwd-error" id="pwdError"></div>
-        <div class="btn-row">
-            <button class="btn btn-secondary" onclick="closePwdModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="checkPassword()">Enter</button>
-        </div>
-        <p style="font-size:12px; color:var(--muted); margin-top:16px;">Default: <code>admin123</code></p>
+<!-- ═══════════════════════ PASSWORD MODAL ═══════════════════════ -->
+<div class="overlay" id="pwdModal">
+  <div class="modal" style="text-align:center;">
+    <h3>Admin Access</h3>
+    <input type="password" id="adminPwd" class="pwd-input" placeholder="••••••••" autocomplete="off">
+    <div class="pwd-err" id="pwdErr"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closePwdModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="checkPwd()">Enter</button>
     </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:14px;">Default: <code>admin123</code></p>
+  </div>
 </div>
 
 
-<!-- ── TICKET SUCCESS MODAL ── -->
+<!-- ═══════════════════════ TICKET MODAL ═══════════════════════ -->
 <div class="overlay" id="ticketModal">
-    <div class="modal">
-        <div class="success-icon-wrap" style="background:#FEF3C7; color:var(--amber);">
-            <i class="fas fa-life-ring"></i>
-        </div>
-        <h3>Ticket Submitted!</h3>
-        <p>Our team will call you back within 5 minutes.</p>
-        <div class="modal-detail-block">
-            <p><strong>Reference ID:</strong> <span id="tm_trxId">—</span></p>
-            <p><strong>Callback Number:</strong> <span id="tm_phone">—</span></p>
-            <p><strong>Submitted at:</strong> <span id="tm_time">—</span></p>
-            <p><strong>Operator:</strong> +880 1716 900948</p>
-        </div>
-        <button class="btn btn-primary btn-full" onclick="document.getElementById('ticketModal').classList.remove('show')">Close</button>
+  <div class="modal" style="text-align:center;">
+    <div class="modal-ico ico-amber"><i class="fas fa-life-ring"></i></div>
+    <h3 id="tm_title">Ticket Submitted!</h3>
+    <p id="tm_body">Our team will call you back within 5 minutes.</p>
+    <div class="modal-det">
+      <p><strong>Ref ID:</strong> <span id="tm_trx">—</span></p>
+      <p><strong>Callback:</strong> <span id="tm_phone">—</span></p>
+      <p><strong>At:</strong> <span id="tm_time">—</span></p>
+      <p><strong>Operator:</strong> +880 1716 900948</p>
     </div>
+    <button class="btn btn-primary btn-full" onclick="document.getElementById('ticketModal').classList.remove('show')">Close</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════ SAVE CONTACT MODAL ═══════════════════════ -->
+<div class="overlay" id="saveModal">
+  <div class="modal" style="text-align:center;">
+    <div class="modal-ico ico-green"><i class="fas fa-user-plus"></i></div>
+    <h3 id="sm_title">Save Contact?</h3>
+    <p id="sm_body">Save this receiver for quick access next time.</p>
+    <input type="text" id="contactName" class="input" placeholder="e.g. Mama, Bhai, Office" style="margin-bottom:12px;">
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="document.getElementById('saveModal').classList.remove('show')" id="sm_skip">Skip</button>
+      <button class="btn btn-green" onclick="saveContact()" id="sm_save">Save</button>
+    </div>
+  </div>
 </div>
 
 
 <script>
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    CONFIG
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════════ */
 const CFG = {
-    ADMIN_PASSWORD: 'admin123',
-    DISCORD_WEBHOOK: 'https://discord.com/api/webhooks/1465664056118481073/9-Inb8tE143hPSEIowXuv0Of1huUpodEOgCyRs_yDCJl3OPILwl9sH8QFMLbWCJWHT4b',
-    STORAGE_KEY: 'cashy_txns_v6',
-    FEE_PCT: 0.0105,
-    MIN: 10,
-    MAX: 50000,
-    CHECK_INTERVAL: 10000,
-    AGENT_PHONE: '01716900948',
-    OPERATOR_PHONE: '+8801716900948'
+  ADMIN_PASSWORD:   'admin123',
+
+  // ── PASTE YOUR APPS SCRIPT WEB APP URL HERE ──────────────
+  // After deploying Code.gs: Deploy → Manage Deployments → copy URL
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxMEZ5PWlmPMAzuJoRrmzRUy-PieMYmzWyL_11sYqhqD1RAD0ZJ2nINx9gtrhZgXiBefg/exec',
+
+  // Must match CONFIG.SECRET inside Code.gs
+  SCRIPT_SECRET: 'Svpam164322$$',
+
+  DISCORD_WEBHOOK: 'https://discord.com/api/webhooks/1465664056118481073/9-Inb8tE143hPSEIowXuv0Of1huUpodEOgCyRs_yDCJl3OPILwl9sH8QFMLbWCJWHT4b',
+  CONTACTS_KEY: 'cashy_contacts_v1',   // still local — contacts stay on device
+  AGENT_PHONE: '01716900948',
+  FEE_PCT: 0.0105,
+  MIN: 10, MAX: 50000,
+  CHECK_INTERVAL: 10000,
+  BKASH_DIRECT_FEE_PCT: 0.0185,
+  OPERATING_START: 8,
+  OPERATING_END: 22,
 };
 
-/* ══════════════════════════════════════════════
-   STATE
-══════════════════════════════════════════════ */
-let state = {
-    step: 1,
-    txn: {},
-    checkTimer: null
+/* ═══════════════════════════════════════════════
+   LANGUAGE STRINGS
+═══════════════════════════════════════════════ */
+const LANG = {
+  en: {
+    logoTag: 'by MAVEN technologies',
+    statusTxt: 'Online',
+    statusOff: 'Offline',
+    hoursTxt: 'Active: 8 AM – 10 PM daily',
+    hoursOff: 'Offline now — opens 8 AM',
+    ql_label: 'Recent',
+    t1_title: 'Send Money', t1_sub: 'Enter the receiver\'s details below.',
+    l_recv: 'Receiver\'s Number', l_rplat: 'Receiver\'s Platform', l_splat: 'Your Platform (sending from)',
+    e_recv: 'Please enter a valid 11-digit number starting with 01.',
+    e_rplat: 'Please select the receiver\'s platform.',
+    e_splat: 'Please select your sending platform.',
+    btn1_txt: 'Continue',
+    t2_title: 'How much?', t2_sub: 'Receiver gets the full amount — fee is added on top.',
+    l_sendto: 'Sending to', l_via: 'Via your',
+    l_amt: 'Amount (BDT)',
+    bl_transfer: 'Transfer amount', bl_fee: 'Service fee (1.05%)', bl_total: 'You pay total',
+    btn2_txt: 'Review & Pay',
+    t3_title: 'Send Payment',
+    t3_sub: 'Use ', t3_sub2: ' to send the exact amount below.',
+    l_agent: 'CASHY Agent Number', l_exact: 'Exact Amount to Send',
+    l_refid: 'Your CASHY Reference ID', l_refhint: 'Save this. We\'ll use it to verify your payment.',
+    btn3_txt: 'I\'ve Sent the Money',
+    t4_title: 'Verifying Payment', t4_sub: 'Our operator is checking your transaction now.',
+    etaTxt: 'Usually ready in 3–5 minutes',
+    alert4_txt: 'Do not close this tab. Your transfer is being processed.',
+    l_verifying: 'Verifying your transaction…',
+    l_refid2: 'Reference ID', l_amt2: 'Transfer Amount', l_fee2: 'Service Fee', l_paid: 'Total Paid',
+    callTxt: 'Urgent: +880 1716 900948', callTxt2: 'Or call: +880 1716 900948',
+    btn4a_txt: 'Help', btn4b_txt: 'Check Status',
+    t5_title: 'Submit a Ticket', t5_sub: 'Tell us the issue and we\'ll call you back immediately.',
+    l_tphone: 'Your Phone (for callback)', l_issue: 'Describe the Issue',
+    btn5_txt: 'Submit Urgent Ticket', btn5b_txt: 'Back',
+    t6_title: 'Payment Verified!', t6_sub: 'The receiver has been paid. All done.',
+    l_s6ref: 'Reference ID', l_s6amt: 'Amount Sent', l_s6recv: 'Receiver', l_s6time: 'Completed',
+    rl_ask: 'How was your experience?',
+    btn6a_txt: 'Receipt', btn6b_txt: 'New Transfer',
+    sm_title: 'Save Contact?', sm_body: 'Save this receiver for quick access next time.',
+    sm_skip: 'Skip', sm_save: 'Save',
+    footerTxt: 'Powered by CASHY · MAVEN technologies',
+    toast_welcome: 'Welcome to CASHY',
+    toast_verified: 'Payment verified!',
+    toast_new: 'Ready for new transfer!',
+    toast_receipt: 'Receipt downloaded!',
+    toast_ticket: 'Ticket submitted!',
+    toast_status: 'Still verifying…',
+    toast_contact: 'Contact saved!',
+    toast_rated: 'Thanks for your feedback!',
+    confirm_sent: (total, phone) => `Did you send ৳${total} to ${phone}?\n\nMake sure the amount is exact.`,
+    confirm_verify: id => `Verify transaction ${id}? This cannot be undone.`,
+    howto: {
+      bkash:  ['Dial <strong>*247#</strong> or open the bKash app', 'Tap <strong>Send Money</strong>', 'Enter the agent number shown above', 'Enter the <strong>exact</strong> amount shown above', 'Enter your PIN and confirm', 'Note the Transaction ID from the SMS'],
+      nagad:  ['Dial <strong>*167#</strong> or open the Nagad app', 'Tap <strong>Send Money</strong>', 'Enter the agent number shown above', 'Enter the <strong>exact</strong> amount shown above', 'Enter your PIN and confirm', 'Note the Transaction ID from the SMS'],
+      rocket: ['Dial <strong>*322#</strong> or open the Rocket app', 'Tap <strong>Send Money</strong>', 'Enter the agent number shown above', 'Enter the <strong>exact</strong> amount shown above', 'Enter your PIN and confirm', 'Note the Transaction ID from the SMS'],
+    },
+    howtoTitle: p => `How to send via ${p}:`,
+    savings: (amt) => `You save ৳${amt} vs bKash direct`,
+    e_amt: 'Enter an amount between ৳10 and ৳50,000.',
+    offline_alert: 'CASHY is currently offline. Operating hours: 8 AM – 10 PM.',
+  },
+  bn: {
+    logoTag: 'MAVEN technologies দ্বারা',
+    statusTxt: 'অনলাইন',
+    statusOff: 'অফলাইন',
+    hoursTxt: 'সক্রিয়: সকাল ৮টা – রাত ১০টা',
+    hoursOff: 'এখন অফলাইন — সকাল ৮টায় খোলে',
+    ql_label: 'সাম্প্রতিক',
+    t1_title: 'টাকা পাঠান', t1_sub: 'নিচে প্রাপকের তথ্য দিন।',
+    l_recv: 'প্রাপকের নম্বর', l_rplat: 'প্রাপকের প্ল্যাটফর্ম', l_splat: 'আপনার প্ল্যাটফর্ম',
+    e_recv: 'অনুগ্রহ করে ০১ দিয়ে শুরু হওয়া ১১ সংখ্যার নম্বর দিন।',
+    e_rplat: 'প্রাপকের প্ল্যাটফর্ম বেছে নিন।',
+    e_splat: 'আপনার পাঠানোর প্ল্যাটফর্ম বেছে নিন।',
+    btn1_txt: 'এগিয়ে যান',
+    t2_title: 'কত টাকা?', t2_sub: 'প্রাপক পুরো পরিমাণ পাবেন — ফি আলাদা যোগ হবে।',
+    l_sendto: 'পাঠানো হচ্ছে', l_via: 'আপনার',
+    l_amt: 'পরিমাণ (টাকা)',
+    bl_transfer: 'ট্রান্সফার পরিমাণ', bl_fee: 'সার্ভিস ফি (১.০৫%)', bl_total: 'মোট দিতে হবে',
+    btn2_txt: 'পর্যালোচনা করুন',
+    t3_title: 'টাকা পাঠান',
+    t3_sub: '', t3_sub2: 'দিয়ে নিচের পরিমাণটি ঠিকঠাক পাঠান।',
+    l_agent: 'CASHY এজেন্ট নম্বর', l_exact: 'ঠিক যে পরিমাণ পাঠাবেন',
+    l_refid: 'আপনার CASHY রেফারেন্স আইডি', l_refhint: 'এটি সংরক্ষণ করুন। আমরা যাচাইয়ে ব্যবহার করব।',
+    btn3_txt: 'টাকা পাঠিয়েছি',
+    t4_title: 'পেমেন্ট যাচাই হচ্ছে', t4_sub: 'আমাদের অপারেটর এখন যাচাই করছেন।',
+    etaTxt: 'সাধারণত ৩–৫ মিনিটে হয়',
+    alert4_txt: 'এই ট্যাব বন্ধ করবেন না। আপনার ট্রান্সফার প্রক্রিয়া চলছে।',
+    l_verifying: 'যাচাই চলছে…',
+    l_refid2: 'রেফারেন্স আইডি', l_amt2: 'ট্রান্সফার পরিমাণ', l_fee2: 'সার্ভিস ফি', l_paid: 'মোট পরিশোধ',
+    callTxt: 'জরুরি: +৮৮০ ১৭১৬ ৯০০৯৪৮', callTxt2: 'অথবা কল করুন: +৮৮০ ১৭১৬ ৯০০৯৪৮',
+    btn4a_txt: 'সাহায্য', btn4b_txt: 'স্ট্যাটাস দেখুন',
+    t5_title: 'টিকিট জমা দিন', t5_sub: 'সমস্যা জানান, আমরা দ্রুত যোগাযোগ করব।',
+    l_tphone: 'আপনার নম্বর (কলব্যাকের জন্য)', l_issue: 'সমস্যা বর্ণনা করুন',
+    btn5_txt: 'জরুরি টিকিট জমা দিন', btn5b_txt: 'ফিরে যান',
+    t6_title: 'পেমেন্ট সফল!', t6_sub: 'প্রাপক টাকা পেয়েছেন।',
+    l_s6ref: 'রেফারেন্স আইডি', l_s6amt: 'পাঠানো পরিমাণ', l_s6recv: 'প্রাপক', l_s6time: 'সম্পন্ন',
+    rl_ask: 'আপনার অভিজ্ঞতা কেমন ছিল?',
+    btn6a_txt: 'রসিদ', btn6b_txt: 'নতুন ট্রান্সফার',
+    sm_title: 'কন্টাক্ট সেভ করবেন?', sm_body: 'পরের বার দ্রুত পাঠাতে এই প্রাপক সেভ করুন।',
+    sm_skip: 'না', sm_save: 'সেভ করুন',
+    footerTxt: 'CASHY · MAVEN technologies দ্বারা পরিচালিত',
+    toast_welcome: 'CASHY-তে স্বাগতম',
+    toast_verified: 'পেমেন্ট যাচাই সম্পন্ন!',
+    toast_new: 'নতুন ট্রান্সফারের জন্য প্রস্তুত!',
+    toast_receipt: 'রসিদ ডাউনলোড হয়েছে!',
+    toast_ticket: 'টিকিট জমা হয়েছে!',
+    toast_status: 'এখনও যাচাই চলছে…',
+    toast_contact: 'কন্টাক্ট সেভ হয়েছে!',
+    toast_rated: 'মতামতের জন্য ধন্যবাদ!',
+    confirm_sent: (total, phone) => `আপনি কি ${phone}-এ ৳${total} পাঠিয়েছেন?\n\nপরিমাণটি ঠিকঠাক নিশ্চিত করুন।`,
+    confirm_verify: id => `${id} ট্রান্সফার যাচাই করবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।`,
+    howto: {
+      bkash:  ['<strong>*২৪৭#</strong> ডায়াল করুন বা bKash অ্যাপ খুলুন', '<strong>সেন্ড মানি</strong> ট্যাপ করুন', 'উপরের এজেন্ট নম্বর দিন', 'উপরের <strong>ঠিক পরিমাণ</strong> দিন', 'পিন দিয়ে নিশ্চিত করুন', 'SMS-এর ট্রানজেকশন আইডি নোট করুন'],
+      nagad:  ['<strong>*১৬৭#</strong> ডায়াল করুন বা Nagad অ্যাপ খুলুন', '<strong>সেন্ড মানি</strong> ট্যাপ করুন', 'উপরের এজেন্ট নম্বর দিন', 'উপরের <strong>ঠিক পরিমাণ</strong> দিন', 'পিন দিয়ে নিশ্চিত করুন', 'SMS-এর রেফারেন্স নম্বর নোট করুন'],
+      rocket: ['<strong>*৩২২#</strong> ডায়াল করুন বা Rocket অ্যাপ খুলুন', '<strong>সেন্ড মানি</strong> ট্যাপ করুন', 'উপরের এজেন্ট নম্বর দিন', 'উপরের <strong>ঠিক পরিমাণ</strong> দিন', 'পিন দিয়ে নিশ্চিত করুন', 'SMS-এর ট্রানজেকশন আইডি নোট করুন'],
+    },
+    howtoTitle: p => `${p} দিয়ে কীভাবে পাঠাবেন:`,
+    savings: (amt) => `bKash সরাসরি ফি-র চেয়ে ৳${amt} সাশ্রয়`,
+    e_amt: '৳১০ থেকে ৳৫০,০০০-এর মধ্যে পরিমাণ দিন।',
+    offline_alert: 'CASHY এখন অফলাইন। কার্যক্রমের সময়: সকাল ৮টা – রাত ১০টা।',
+  }
 };
+
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let lang = localStorage.getItem('cashy_lang') || 'en';
+let txn = {};
+let checkTimer = null;
+let currentStep = 1;
 
 function resetTxn() {
-    state.txn = {
-        id: '',
-        recipientPhone: '',
-        recipientPlatform: '',
-        senderPlatform: '',
-        amount: 0,
-        fee: 0,
-        total: 0,
-        timestamp: '',
-        status: 'pending'
-    };
+  txn = { id:'', recipientPhone:'', recipientPlatform:'', senderPlatform:'', amount:0, fee:0, total:0, timestamp:'', status:'pending' };
 }
 resetTxn();
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
+   LANGUAGE
+═══════════════════════════════════════════════ */
+function L(key) { return LANG[lang][key] || LANG.en[key] || key; }
+
+function applyLang() {
+  const ids = ['logoTag','statusTxt','hoursTxt','ql_label','t1_title','t1_sub','l_recv','l_rplat','l_splat',
+    'btn1_txt','t2_title','t2_sub','l_sendto','l_via','l_amt','bl_transfer','bl_fee','bl_total','btn2_txt',
+    't3_title','t3_sub','t3_sub2','l_agent','l_exact','l_refid','l_refhint','btn3_txt',
+    't4_title','t4_sub','etaTxt','alert4_txt','l_verifying','l_refid2','l_amt2','l_fee2','l_paid',
+    'callTxt','callTxt2','btn4a_txt','btn4b_txt','t5_title','t5_sub','l_tphone','l_issue','btn5_txt','btn5b_txt',
+    't6_title','t6_sub','l_s6ref','l_s6amt','l_s6recv','l_s6time','rl_ask','btn6a_txt','btn6b_txt',
+    'sm_title','sm_body','sm_skip','sm_save','footerTxt'];
+
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = L(id);
+  });
+
+  document.getElementById('langBtn').textContent = lang === 'en' ? 'বাংলা' : 'English';
+  document.getElementById('recipientPhone').placeholder = lang === 'en' ? '01XXXXXXXXX' : '০১XXXXXXXXX';
+
+  // Operating hours
+  const isOpen = isOperating();
+  const hrsEl = document.getElementById('hoursBar');
+  const hrsTxt = document.getElementById('hoursTxt');
+  if (isOpen) {
+    hrsEl.style.background = 'var(--green3)';
+    hrsEl.style.borderColor = '#A7D7BB';
+    hrsEl.style.color = 'var(--green)';
+    hrsTxt.textContent = L('hoursTxt');
+  } else {
+    hrsEl.style.background = 'var(--amber2)';
+    hrsEl.style.borderColor = '#FBCF87';
+    hrsEl.style.color = 'var(--amber)';
+    hrsTxt.textContent = L('hoursOff');
+  }
+}
+
+function toggleLang() {
+  lang = lang === 'en' ? 'bn' : 'en';
+  localStorage.setItem('cashy_lang', lang);
+  applyLang();
+}
+
+/* ═══════════════════════════════════════════════
+   OPERATING HOURS
+═══════════════════════════════════════════════ */
+function isOperating() {
+  const h = new Date().getHours();
+  return h >= CFG.OPERATING_START && h < CFG.OPERATING_END;
+}
+
+/* ═══════════════════════════════════════════════
+   SAVED CONTACTS
+═══════════════════════════════════════════════ */
+function getContacts() {
+  try { return JSON.parse(localStorage.getItem(CFG.CONTACTS_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function saveContactData(name, phone, rPlatform, sPlatform) {
+  const contacts = getContacts();
+  const existing = contacts.findIndex(c => c.phone === phone);
+  const entry = { name, phone, rPlatform, sPlatform, usedAt: Date.now() };
+  if (existing >= 0) contacts[existing] = entry;
+  else contacts.unshift(entry);
+  localStorage.setItem(CFG.CONTACTS_KEY, JSON.stringify(contacts.slice(0, 10)));
+}
+
+function renderQuickSend() {
+  const contacts = getContacts();
+  const section = document.getElementById('quickSection');
+  const row = document.getElementById('quickRow');
+
+  if (!contacts.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  row.innerHTML = '';
+
+  document.getElementById('ql_label').textContent = L('ql_label');
+
+  contacts.forEach(c => {
+    const chip = document.createElement('div');
+    chip.className = 'quick-chip';
+    const initials = c.name.slice(0,2).toUpperCase();
+    chip.innerHTML = `<div class="quick-avatar">${initials}</div><span>${c.name}</span>`;
+    chip.onclick = () => fillFromContact(c);
+    row.appendChild(chip);
+  });
+}
+
+function fillFromContact(c) {
+  document.getElementById('recipientPhone').value = c.phone;
+  // Select platforms
+  document.querySelectorAll('.pill[data-type="receiver"]').forEach(p => {
+    p.classList.toggle('selected', p.dataset.platform === c.rPlatform);
+  });
+  document.querySelectorAll('.pill[data-type="sender"]').forEach(p => {
+    p.classList.toggle('selected', p.dataset.platform === c.sPlatform);
+  });
+  toast(`Loaded: ${c.name}`, 'info');
+}
+
+function saveContact() {
+  const name = document.getElementById('contactName').value.trim();
+  if (!name) return;
+  saveContactData(name, txn.recipientPhone, txn.recipientPlatform, txn.senderPlatform);
+  document.getElementById('saveModal').classList.remove('show');
+  toast(L('toast_contact'), 'success');
+  renderQuickSend();
+}
+
+/* ═══════════════════════════════════════════════
    HELPERS
-══════════════════════════════════════════════ */
-function fmtAmt(n) {
-    return new Intl.NumberFormat('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
-}
-
-function fmtPlatform(p) {
-    return { bkash: 'bKash', nagad: 'Nagad', rocket: 'Rocket' }[p] || p;
-}
-
+═══════════════════════════════════════════════ */
+function fmtAmt(n) { return parseFloat(n).toLocaleString('en-BD', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtPlat(p) { return {bkash:'bKash',nagad:'Nagad',rocket:'Rocket'}[p]||p; }
 function validPhone(p) { return /^01[3-9]\d{8}$/.test(p); }
+function genId() { return Array.from({length:10},()=>'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random()*36)]).join(''); }
+function nowStr() { return new Date().toLocaleString('en-BD',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}); }
 
-function genId() {
-    return Array.from({ length: 10 }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
+function selectPill(el) {
+  const type = el.dataset.type;
+  document.querySelectorAll(`.pill[data-type="${type}"]`).forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById(type === 'receiver' ? 'e_rplat' : 'e_splat').classList.remove('show');
 }
 
-function nowStr() {
-    return new Date().toLocaleString('en-BD', {
-        year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
-    });
-}
-
-/* ══════════════════════════════════════════════
-   STORAGE
-══════════════════════════════════════════════ */
-function getTxns() {
-    try { return JSON.parse(localStorage.getItem(CFG.STORAGE_KEY) || '[]'); } catch(e) { return []; }
-}
-
-function saveTxn(txn) {
-    const list = getTxns();
-    list.push(txn);
-    localStorage.setItem(CFG.STORAGE_KEY, JSON.stringify(list));
-    sendDiscord(txn, 'new');
-}
-
-function updateStatus(id, status) {
-    const list = getTxns();
-    const t = list.find(t => t.id === id);
-    if (!t) return false;
-    t.status = status;
-    t.verifiedAt = new Date().toISOString();
-    localStorage.setItem(CFG.STORAGE_KEY, JSON.stringify(list));
-    if (status === 'verified') {
-        sendDiscord(t, 'verified');
-        notifyIfWaiting(id);
-    }
-    return true;
-}
-
-function getStatus(id) {
-    const t = getTxns().find(t => t.id === id);
-    return t ? t.status : null;
-}
-
-function adminStats() {
-    const list = getTxns();
-    return {
-        total: list.length,
-        amount: fmtAmt(list.reduce((s, t) => s + parseFloat(t.amount), 0)),
-        pending: list.filter(t => t.status === 'pending').length,
-        verified: list.filter(t => t.status === 'verified').length
-    };
-}
-
-/* ══════════════════════════════════════════════
-   DISCORD
-══════════════════════════════════════════════ */
-async function discordPost(payload) {
-    try {
-        await fetch('https://corsproxy.io/?' + encodeURIComponent(CFG.DISCORD_WEBHOOK), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-    } catch(e) { /* silent */ }
-}
-
-function sendDiscord(txn, type) {
-    const isNew = type === 'new';
-    discordPost({
-        username: 'CASHY Bot',
-        embeds: [{
-            title: isNew ? '💸 New Transaction' : '✅ Transaction Verified',
-            color: isNew ? 0x2D9660 : 0x1A6B47,
-            fields: [
-                { name: 'Ref ID', value: '`' + txn.id + '`', inline: false },
-                { name: 'Receiver', value: txn.recipientPhone + ' (' + fmtPlatform(txn.recipientPlatform) + ')', inline: true },
-                { name: 'Sender Platform', value: fmtPlatform(txn.senderPlatform), inline: true },
-                { name: 'Amount', value: fmtAmt(txn.amount) + ' BDT', inline: true },
-                { name: 'Total Paid', value: fmtAmt(txn.total) + ' BDT', inline: true },
-                { name: 'Status', value: txn.status === 'verified' ? '✅ Verified' : '⏳ Pending', inline: true }
-            ],
-            timestamp: new Date().toISOString(),
-            footer: { text: 'CASHY · MAVEN technologies' }
-        }]
-    });
-}
-
-async function sendTicketDiscord(phone, details) {
-    await discordPost({
-        username: 'CASHY Support',
-        content: '@here 🚨 **URGENT SUPPORT TICKET**',
-        embeds: [{
-            title: '🆘 Support Ticket',
-            color: 0xD97706,
-            fields: [
-                { name: 'Ref ID', value: '`' + (state.txn.id || 'N/A') + '`', inline: false },
-                { name: 'Caller Phone', value: phone, inline: true },
-                { name: 'Amount', value: fmtAmt(state.txn.amount || 0) + ' BDT', inline: true },
-                { name: 'Issue', value: details || '(none)', inline: false }
-            ],
-            timestamp: new Date().toISOString(),
-            footer: { text: 'CASHY Support — reply urgently' }
-        }]
-    });
-}
-
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    NAVIGATION
-══════════════════════════════════════════════ */
-function goToStep(n) {
-    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-    document.getElementById('step' + n).classList.add('active');
-    state.step = n;
-    if (n === 4) startCheck();
-    else stopCheck();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+═══════════════════════════════════════════════ */
+function goTo(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step'+n).classList.add('active');
+  currentStep = n;
+  if (n === 4) startCheck();
+  else stopCheck();
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
-/* ══════════════════════════════════════════════
-   STEP 1 VALIDATION
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   APPS SCRIPT API
+   All data lives in Google Sheets — no localStorage
+   for transactions. Contacts stay local (device only).
+═══════════════════════════════════════════════ */
+
+// Core fetch wrapper — Apps Script only accepts GET and POST
+async function scriptGET(params) {
+  const url = new URL(CFG.SCRIPT_URL);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString(), { redirect: 'follow' });
+  return res.json();
+}
+
+async function scriptPOST(body) {
+  const res = await fetch(CFG.SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    redirect: 'follow'
+  });
+  return res.json();
+}
+
+// Called when customer confirms payment
+async function storeTxn(t) {
+  try {
+    await scriptPOST({
+      action:            'new',
+      id:                t.id,
+      recipientPhone:    t.recipientPhone,
+      recipientPlatform: t.recipientPlatform,
+      senderPlatform:    t.senderPlatform,
+      amount:            t.amount,
+      fee:               t.fee,
+      total:             t.total
+    });
+  } catch(e) {
+    // Silent fail — Discord still fires from the website side
+    console.error('storeTxn error', e);
+  }
+}
+
+// Poll this every 10s on the waiting screen
+async function getStatusRemote(id) {
+  try {
+    const data = await scriptGET({ action: 'status', id });
+    return (data.status || '').toUpperCase();
+  } catch(e) { return null; }
+}
+
+// Admin: verify a transaction
+async function verifyTxn(id, notes) {
+  return scriptPOST({ action: 'verify', secret: CFG.SCRIPT_SECRET, id, notes: notes||'' });
+}
+
+// Admin: revert a transaction
+async function revertTxn(id, reason) {
+  return scriptPOST({ action: 'revert', secret: CFG.SCRIPT_SECRET, id, reason });
+}
+
+// Admin: load all transactions
+async function fetchAllTxns() {
+  const data = await scriptGET({ action: 'list', secret: CFG.SCRIPT_SECRET });
+  return data.transactions || [];
+}
+
+// Admin: load stats
+async function fetchStats() {
+  const data = await scriptGET({ action: 'stats', secret: CFG.SCRIPT_SECRET });
+  return data.stats || { total:0, amount:'0.00', pending:0, verified:0, reverted:0 };
+}
+
+// Send rating to sheet
+async function sendRating(id, rating) {
+  return scriptPOST({ action: 'rating', secret: CFG.SCRIPT_SECRET, id, rating });
+}
+
+// Send ticket to sheet + Discord
+async function sendTicketToScript(txnId, phone, details, amount) {
+  return scriptPOST({ action: 'ticket', secret: CFG.SCRIPT_SECRET, txnId, phone, details, amount });
+}
+
+/* ═══════════════════════════════════════════════
+   DISCORD
+   Apps Script fires Discord for verify/revert/ticket.
+   The website fires Discord only for new transactions
+   (as a backup — Apps Script also does this).
+═══════════════════════════════════════════════ */
+async function discordPost(payload) {
+  try {
+    await fetch('https://corsproxy.io/?'+encodeURIComponent(CFG.DISCORD_WEBHOOK), {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    });
+  } catch(e) {}
+}
+
+function sendDiscord(t) {
+  discordPost({
+    username:'CASHY Bot',
+    embeds:[{
+      title: '💸 New Transaction',
+      color: 0x2D9660,
+      fields:[
+        {name:'Ref ID',   value:'`'+t.id+'`',                                              inline:false},
+        {name:'Receiver', value:t.recipientPhone+' ('+fmtPlat(t.recipientPlatform)+')',    inline:true},
+        {name:'Route',    value:fmtPlat(t.senderPlatform)+' → '+fmtPlat(t.recipientPlatform), inline:true},
+        {name:'Amount',   value:fmtAmt(t.amount)+' BDT',                                   inline:true},
+        {name:'Total',    value:fmtAmt(t.total)+' BDT',                                    inline:true},
+        {name:'Status',   value:'⏳ Awaiting payment',                                      inline:false},
+      ],
+      timestamp: new Date().toISOString(),
+      footer:{text:'CASHY · MAVEN technologies'}
+    }]
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   STEP 1
+═══════════════════════════════════════════════ */
 function validateStep1() {
-    let ok = true;
+  let ok = true;
+  const rp = document.getElementById('recipientPhone').value.trim();
+  const eRecv = document.getElementById('e_recv');
+  if (!validPhone(rp)) { eRecv.textContent = L('e_recv'); eRecv.classList.add('show'); ok=false; }
+  else eRecv.classList.remove('show');
 
-    const rp = document.getElementById('recipientPhone').value.trim();
-    if (!validPhone(rp)) {
-        document.getElementById('recipientPhoneError').classList.add('show');
-        ok = false;
-    } else {
-        document.getElementById('recipientPhoneError').classList.remove('show');
-    }
+  const rPlat = document.querySelector('.pill[data-type="receiver"].selected');
+  const eRp = document.getElementById('e_rplat');
+  if (!rPlat) { eRp.textContent = L('e_rplat'); eRp.classList.add('show'); ok=false; }
+  else eRp.classList.remove('show');
 
-    const rPlat = document.querySelector('.pill[data-type="receiver"].selected');
-    if (!rPlat) {
-        document.getElementById('receiverPlatformError').classList.add('show');
-        ok = false;
-    } else {
-        document.getElementById('receiverPlatformError').classList.remove('show');
-    }
+  const sPlat = document.querySelector('.pill[data-type="sender"].selected');
+  const eSp = document.getElementById('e_splat');
+  if (!sPlat) { eSp.textContent = L('e_splat'); eSp.classList.add('show'); ok=false; }
+  else eSp.classList.remove('show');
 
-    const sPlat = document.querySelector('.pill[data-type="sender"].selected');
-    if (!sPlat) {
-        document.getElementById('senderPlatformError').classList.add('show');
-        ok = false;
-    } else {
-        document.getElementById('senderPlatformError').classList.remove('show');
-    }
+  if (rPlat && sPlat && rPlat.dataset.platform === sPlat.dataset.platform) {
+    toast(lang==='en' ? 'Sending and receiving platform must be different.' : 'পাঠানো ও পাওয়ার প্ল্যাটফর্ম আলাদা হতে হবে।', 'error');
+    ok = false;
+  }
+  if (!ok) return;
 
-    if (rPlat && sPlat && rPlat.dataset.platform === sPlat.dataset.platform) {
-        toast('Sending and receiving platform must be different.', 'error');
-        ok = false;
-    }
+  txn.recipientPhone = rp;
+  txn.recipientPlatform = rPlat.dataset.platform;
+  txn.senderPlatform = sPlat.dataset.platform;
 
-    if (!ok) return;
+  // Update step 2 summary
+  document.getElementById('s2Phone').textContent = rp;
+  document.getElementById('s2RBadge').textContent = fmtPlat(txn.recipientPlatform);
+  document.getElementById('s2SBadge').textContent = fmtPlat(txn.senderPlatform);
+  document.getElementById('l_sendto').textContent = L('l_sendto');
+  document.getElementById('l_via').textContent = L('l_via');
 
-    state.txn.recipientPhone = rp;
-    state.txn.recipientPlatform = rPlat.dataset.platform;
-    state.txn.senderPlatform = sPlat.dataset.platform;
-
-    // Update step 2 summary
-    document.getElementById('s2ReceiverPhone').textContent = rp;
-    document.getElementById('s2ReceiverBadge').textContent = fmtPlatform(state.txn.recipientPlatform);
-    document.getElementById('s2SenderBadge').textContent = fmtPlatform(state.txn.senderPlatform);
-
-    goToStep(2);
+  goTo(2);
 }
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    STEP 2: AMOUNT
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════════ */
 function validateAmount() {
-    const val = parseFloat(document.getElementById('amount').value);
-    if (!val || val < CFG.MIN || val > CFG.MAX) {
-        document.getElementById('amountError').classList.add('show');
-        return;
-    }
-    document.getElementById('amountError').classList.remove('show');
+  const val = parseFloat(document.getElementById('amount').value);
+  const eAmt = document.getElementById('e_amt');
+  if (!val || val < CFG.MIN || val > CFG.MAX) {
+    eAmt.textContent = L('e_amt'); eAmt.classList.add('show'); return;
+  }
+  eAmt.classList.remove('show');
 
-    const fee = parseFloat((val * CFG.FEE_PCT).toFixed(2));
-    const total = val + fee;
+  const fee   = parseFloat((val * CFG.FEE_PCT).toFixed(2));
+  const total = val + fee;
+  txn.amount = val; txn.fee = fee; txn.total = total;
+  txn.id = genId();
 
-    state.txn.amount = val;
-    state.txn.fee = fee;
-    state.txn.total = total;
-    state.txn.id = genId();
+  // Step 3
+  document.getElementById('s3Platform').textContent = fmtPlat(txn.senderPlatform);
+  document.getElementById('t3_sub').textContent = L('t3_sub');
+  document.getElementById('t3_sub2').textContent = L('t3_sub2');
+  document.getElementById('s3AgentNum').textContent = CFG.AGENT_PHONE;
+  document.getElementById('s3Total').textContent = '৳ '+fmtAmt(total);
+  document.getElementById('s3TrxId').textContent = txn.id;
+  document.getElementById('l_agent').textContent = L('l_agent');
+  document.getElementById('l_exact').textContent = L('l_exact');
+  document.getElementById('l_refid').textContent = L('l_refid');
+  document.getElementById('l_refhint').textContent = L('l_refhint');
 
-    // Step 3 UI
-    const platName = fmtPlatform(state.txn.senderPlatform);
-    document.getElementById('s3Platform').textContent = platName;
-    document.getElementById('s3PlatformName').textContent = platName;
-    document.getElementById('s3AgentNum').textContent = CFG.AGENT_PHONE;
-    document.getElementById('s3Total').textContent = '৳ ' + fmtAmt(total) + ' BDT';
-    document.getElementById('s3TrxId').textContent = state.txn.id;
+  // Platform steps
+  const steps = L('howto')[txn.senderPlatform] || L('howto').bkash;
+  document.getElementById('s3Steps').innerHTML = steps.map(s=>`<li>${s}</li>`).join('');
+  document.getElementById('s3HowTitle').textContent = L('howtoTitle')(fmtPlat(txn.senderPlatform));
 
-    // Platform-specific steps
-    const stepsEl = document.getElementById('s3Steps');
-    const steps = {
-        bkash: ['Dial <strong>*247#</strong> or open the bKash app', 'Tap <strong>Send Money</strong>', 'Enter the agent number above', 'Enter the exact amount above', 'Enter your PIN and confirm', 'Save the Transaction ID from the SMS'],
-        nagad: ['Dial <strong>*167#</strong> or open the Nagad app', 'Tap <strong>Send Money</strong>', 'Enter the agent number above', 'Enter the exact amount above', 'Enter your PIN and confirm', 'Save the Transaction ID from the SMS'],
-        rocket: ['Dial <strong>*322#</strong> or open the Rocket app', 'Tap <strong>Send Money</strong>', 'Enter the agent number above', 'Enter the exact amount above', 'Enter your PIN and confirm', 'Save the Transaction ID from the SMS']
-    };
-    stepsEl.innerHTML = (steps[state.txn.senderPlatform] || steps.bkash)
-        .map(s => '<li>' + s + '</li>').join('');
-
-    goToStep(3);
+  goTo(3);
 }
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    STEP 3: CONFIRM PAYMENT
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════════ */
 function confirmPayment() {
-    if (!confirm('Did you send ৳' + fmtAmt(state.txn.total) + ' to ' + CFG.AGENT_PHONE + '?\n\nMake sure the amount is exact.')) return;
+  if (!confirm(L('confirm_sent')(fmtAmt(txn.total), CFG.AGENT_PHONE))) return;
 
-    state.txn.timestamp = new Date().toISOString();
-    saveTxn({ ...state.txn });
+  txn.timestamp = new Date().toISOString();
 
-    // Populate step 4
-    document.getElementById('v4TrxId').textContent = state.txn.id;
-    document.getElementById('v4Amount').textContent = '৳ ' + fmtAmt(state.txn.amount) + ' BDT';
-    document.getElementById('v4Fee').textContent = '৳ ' + fmtAmt(state.txn.fee) + ' BDT';
-    document.getElementById('v4Total').textContent = '৳ ' + fmtAmt(state.txn.total) + ' BDT';
+  // Fire and forget — both in parallel
+  storeTxn({...txn});   // → Google Sheet
+  sendDiscord({...txn}); // → Discord (backup)
 
-    goToStep(4);
-    toast('Payment recorded. Awaiting verification…', 'info');
+  // Step 4
+  document.getElementById('v4Trx').textContent   = txn.id;
+  document.getElementById('v4Amt').textContent   = '৳ '+fmtAmt(txn.amount);
+  document.getElementById('v4Fee').textContent   = '৳ '+fmtAmt(txn.fee);
+  document.getElementById('v4Total').textContent = '৳ '+fmtAmt(txn.total);
+
+  goTo(4);
+
+  // Offer to save contact
+  setTimeout(() => {
+    const contacts = getContacts();
+    const alreadySaved = contacts.some(c => c.phone === txn.recipientPhone);
+    if (!alreadySaved) document.getElementById('saveModal').classList.add('show');
+  }, 1200);
 }
 
-/* ══════════════════════════════════════════════
-   VERIFICATION POLLING
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   VERIFICATION
+═══════════════════════════════════════════════ */
 function startCheck() {
-    stopCheck();
-    checkVerificationStatus();
-    state.checkTimer = setInterval(checkVerificationStatus, CFG.CHECK_INTERVAL);
+  stopCheck();
+  checkStatus();
+  checkTimer = setInterval(checkStatus, CFG.CHECK_INTERVAL);
 }
 
 function stopCheck() {
-    if (state.checkTimer) { clearInterval(state.checkTimer); state.checkTimer = null; }
+  if (checkTimer) { clearInterval(checkTimer); checkTimer = null; }
 }
 
-function checkVerificationStatus() {
-    if (getStatus(state.txn.id) === 'verified') {
-        showSuccess();
-    } else {
-        toast('Still verifying…', 'info');
-    }
+async function checkStatus() {
+  const status = await getStatusRemote(txn.id);
+  if (status === 'VERIFIED' || status === 'PROCESSING') {
+    showSuccess();
+  }
+  // no toast spam on every poll — only show on manual check button
 }
 
 function notifyIfWaiting(id) {
-    if (state.step === 4 && state.txn.id === id) showSuccess();
+  if (currentStep === 4 && txn.id === id) showSuccess();
 }
 
 function showSuccess() {
-    stopCheck();
-    document.getElementById('s6TrxId').textContent = state.txn.id;
-    document.getElementById('s6Amount').textContent = '৳ ' + fmtAmt(state.txn.amount) + ' BDT';
-    document.getElementById('s6Receiver').textContent = state.txn.recipientPhone + ' (' + fmtPlatform(state.txn.recipientPlatform) + ')';
-    document.getElementById('s6Time').textContent = nowStr();
-    goToStep(6);
-    toast('Payment verified!', 'success');
+  stopCheck();
+  document.getElementById('s6Trx').textContent  = txn.id;
+  document.getElementById('s6Amt').textContent  = '৳ '+fmtAmt(txn.amount);
+  document.getElementById('s6Recv').textContent = txn.recipientPhone+' ('+fmtPlat(txn.recipientPlatform)+')';
+  document.getElementById('s6Time').textContent = nowStr();
+  goTo(6);
+  toast(L('toast_verified'), 'success');
 }
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
+   RATING
+═══════════════════════════════════════════════ */
+function rate(val) {
+  document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected-good','selected-bad'));
+  if (val === 'good') document.querySelector('.rating-btn.good').classList.add('selected-good');
+  else document.querySelector('.rating-btn.bad').classList.add('selected-bad');
+  toast(L('toast_rated'), 'success');
+  sendRating(txn.id, val); // → Google Sheet + Discord
+}
+
+/* ═══════════════════════════════════════════════
    TICKET
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════════ */
 async function submitTicket() {
-    const phone = document.getElementById('ticketPhone').value.trim();
-    const details = document.getElementById('ticketDetails').value.trim();
+  const phone   = document.getElementById('ticketPhone').value.trim();
+  const details = document.getElementById('ticketDetails').value.trim();
+  if (!validPhone(phone)) { toast(lang==='en'?'Enter a valid phone number.':'সঠিক নম্বর দিন।','error'); return; }
+  if (!details) { toast(lang==='en'?'Please describe the issue.':'সমস্যা বর্ণনা করুন।','error'); return; }
 
-    if (!validPhone(phone)) { toast('Please enter a valid phone number.', 'error'); return; }
-    if (!details) { toast('Please describe the issue.', 'error'); return; }
+  // Apps Script handles Discord ping for tickets
+  await sendTicketToScript(txn.id||'N/A', phone, details, txn.amount||0);
 
-    await sendTicketDiscord(phone, details);
-
-    document.getElementById('tm_trxId').textContent = state.txn.id || 'N/A';
-    document.getElementById('tm_phone').textContent = phone;
-    document.getElementById('tm_time').textContent = nowStr();
-    document.getElementById('ticketModal').classList.add('show');
-
-    document.getElementById('ticketPhone').value = '';
-    document.getElementById('ticketDetails').value = '';
+  document.getElementById('tm_trx').textContent   = txn.id||'N/A';
+  document.getElementById('tm_phone').textContent = phone;
+  document.getElementById('tm_time').textContent  = nowStr();
+  document.getElementById('ticketModal').classList.add('show');
+  document.getElementById('ticketPhone').value    = '';
+  document.getElementById('ticketDetails').value  = '';
+  toast(L('toast_ticket'), 'success');
 }
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    NEW TRANSACTION
-══════════════════════════════════════════════ */
-function startNewTransaction() {
-    document.getElementById('recipientPhone').value = '';
-    document.getElementById('amount').value = '';
-    document.getElementById('breakdownBox').style.display = 'none';
-    document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
-    resetTxn();
-    goToStep(1);
+═══════════════════════════════════════════════ */
+function newTransaction() {
+  document.getElementById('recipientPhone').value = '';
+  document.getElementById('amount').value = '';
+  document.getElementById('breakdownBox').classList.remove('show');
+  document.getElementById('savingsBox').style.display = 'none';
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+  resetTxn();
+  renderQuickSend();
+  goTo(1);
+  toast(L('toast_new'), 'info');
 }
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    PDF RECEIPT
-══════════════════════════════════════════════ */
-function downloadPDFReceipt() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+═══════════════════════════════════════════════ */
+function downloadReceipt() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
 
-    doc.setFillColor(26, 107, 71);
-    doc.rect(0, 0, 210, 36, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(26);
-    doc.text('CASHY', 105, 22, { align: 'center' });
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Secure Money Transfer Receipt', 105, 30, { align: 'center' });
+  doc.setFillColor(26,107,71);
+  doc.rect(0,0,210,34,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(24);
+  doc.text('CASHY',105,20,{align:'center'});
+  doc.setFontSize(11); doc.setFont('helvetica','normal');
+  doc.text('Secure Money Transfer Receipt',105,29,{align:'center'});
 
-    doc.setTextColor(100, 100, 100);
-    doc.setFontSize(11);
-    doc.text('Ref ID: ' + state.txn.id, 105, 46, { align: 'center' });
-    doc.text('Date: ' + nowStr(), 105, 52, { align: 'center' });
+  doc.setTextColor(100,100,100); doc.setFontSize(11);
+  doc.text('Ref ID: '+txn.id,105,45,{align:'center'});
+  doc.text('Date: '+nowStr(),105,51,{align:'center'});
 
-    doc.setDrawColor(220, 220, 220);
-    doc.line(20, 58, 190, 58);
+  doc.setDrawColor(220,220,220); doc.line(20,57,190,57);
+  doc.setTextColor(0); doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.text('TRANSACTION SUMMARY',20,68);
 
-    doc.setTextColor(0);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('TRANSACTION SUMMARY', 20, 70);
+  const rows = [
+    ['Receiver Phone', txn.recipientPhone],
+    ['Receiver Platform', fmtPlat(txn.recipientPlatform)],
+    ['Sent Via', fmtPlat(txn.senderPlatform)],
+    ['Transfer Amount', fmtAmt(txn.amount)+' BDT'],
+    ['Service Fee (1.05%)', fmtAmt(txn.fee)+' BDT'],
+    ['Total Paid', fmtAmt(txn.total)+' BDT'],
+    ['Agent Number', CFG.AGENT_PHONE],
+  ];
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(12);
-    const rows = [
-        ['Receiver Phone', state.txn.recipientPhone],
-        ['Receiver Platform', fmtPlatform(state.txn.recipientPlatform)],
-        ['Sent Via', fmtPlatform(state.txn.senderPlatform)],
-        ['Transfer Amount', fmtAmt(state.txn.amount) + ' BDT'],
-        ['Service Fee (1.05%)', fmtAmt(state.txn.fee) + ' BDT'],
-        ['Total Paid', fmtAmt(state.txn.total) + ' BDT']
-    ];
+  let y = 78;
+  doc.setFont('helvetica','normal'); doc.setFontSize(12);
+  rows.forEach(([label,val]) => {
+    doc.setTextColor(120,120,120); doc.text(label,20,y);
+    doc.setTextColor(0); doc.setFont('helvetica','bold'); doc.text(val,130,y);
+    doc.setFont('helvetica','normal'); y+=9;
+  });
 
-    let y = 80;
-    rows.forEach(([label, val]) => {
-        doc.setTextColor(120, 120, 120);
-        doc.text(label, 20, y);
-        doc.setTextColor(0);
-        doc.setFont('helvetica', 'bold');
-        doc.text(val, 130, y);
-        doc.setFont('helvetica', 'normal');
-        y += 10;
-    });
+  doc.setFontSize(13); doc.setTextColor(26,107,71); doc.setFont('helvetica','bold');
+  doc.text('STATUS: VERIFIED & COMPLETE',105,y+10,{align:'center'});
 
-    doc.setFontSize(14);
-    doc.setTextColor(26, 107, 71);
-    doc.setFont('helvetica', 'bold');
-    doc.text('STATUS: VERIFIED & COMPLETE', 105, y + 12, { align: 'center' });
+  doc.setFontSize(10); doc.setTextColor(150); doc.setFont('helvetica','normal');
+  doc.text('Thank you for using CASHY · MAVEN technologies',105,280,{align:'center'});
+  doc.text('Support: +880 1716 900948',105,286,{align:'center'});
 
-    doc.setFontSize(10);
-    doc.setTextColor(150);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Thank you for using CASHY · MAVEN technologies', 105, 280, { align: 'center' });
-    doc.text('Support: +880 1716 900948', 105, 286, { align: 'center' });
-
-    doc.save('CASHY_Receipt_' + state.txn.id + '.pdf');
-    toast('Receipt downloaded!', 'success');
+  doc.save('CASHY_Receipt_'+txn.id+'.pdf');
+  toast(L('toast_receipt'), 'success');
 }
 
-/* ══════════════════════════════════════════════
-   ADMIN PANEL
-══════════════════════════════════════════════ */
-function showPasswordModal() {
-    document.getElementById('passwordModal').classList.add('show');
-    document.getElementById('adminPassword').focus();
+/* ═══════════════════════════════════════════════
+   ADMIN
+═══════════════════════════════════════════════ */
+function showPwdModal() { document.getElementById('pwdModal').classList.add('show'); document.getElementById('adminPwd').focus(); }
+function closePwdModal() { document.getElementById('pwdModal').classList.remove('show'); document.getElementById('adminPwd').value=''; document.getElementById('pwdErr').textContent=''; }
+function checkPwd() {
+  if (document.getElementById('adminPwd').value === CFG.ADMIN_PASSWORD) {
+    closePwdModal(); document.getElementById('adminPanel').classList.add('show'); refreshAdmin();
+  } else {
+    document.getElementById('pwdErr').textContent = lang==='en'?'Incorrect password.':'ভুল পাসওয়ার্ড।';
+    document.getElementById('adminPwd').value = '';
+    document.getElementById('adminPwd').classList.add('shake');
+    setTimeout(()=>document.getElementById('adminPwd').classList.remove('shake'),450);
+  }
 }
+function closeAdmin() { document.getElementById('adminPanel').classList.remove('show'); }
 
-function closePwdModal() {
-    document.getElementById('passwordModal').classList.remove('show');
-    document.getElementById('adminPassword').value = '';
-    document.getElementById('pwdError').textContent = '';
-}
+async function refreshAdmin() {
+  // Show loading state
+  document.getElementById('adminTbody').innerHTML =
+    '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted);"><div class="spinner" style="margin:0 auto;width:32px;height:32px;"></div></td></tr>';
 
-function checkPassword() {
-    const pw = document.getElementById('adminPassword').value;
-    if (pw === CFG.ADMIN_PASSWORD) {
-        closePwdModal();
-        openAdmin();
-    } else {
-        document.getElementById('pwdError').textContent = 'Incorrect password. Try again.';
-        document.getElementById('adminPassword').value = '';
-        document.getElementById('adminPassword').classList.add('shake');
-        setTimeout(() => document.getElementById('adminPassword').classList.remove('shake'), 500);
-    }
-}
+  try {
+    const [stats, txns] = await Promise.all([ fetchStats(), fetchAllTxns() ]);
 
-function openAdmin() {
-    document.getElementById('adminPanel').classList.add('show');
-    refreshAdmin();
-}
+    document.getElementById('aS1').textContent = stats.total;
+    document.getElementById('aS2').textContent = parseFloat(stats.amount).toLocaleString('en-BD', {minimumFractionDigits:2});
+    document.getElementById('aS3').textContent = stats.pending;
+    document.getElementById('aS4').textContent = stats.verified;
 
-function closeAdmin() {
-    document.getElementById('adminPanel').classList.remove('show');
-}
-
-function refreshAdmin() {
-    const list = getTxns();
-    const s = adminStats();
-    document.getElementById('aStat1').textContent = s.total;
-    document.getElementById('aStat2').textContent = s.amount;
-    document.getElementById('aStat3').textContent = s.pending;
-    document.getElementById('aStat4').textContent = s.verified;
-
-    const tbody = document.getElementById('adminTableBody');
+    const tbody = document.getElementById('adminTbody');
     tbody.innerHTML = '';
 
-    if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">No transactions yet</td></tr>';
-        return;
+    if (!txns.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--muted);">No transactions yet</td></tr>';
+      return;
     }
 
-    [...list].reverse().forEach(t => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><code style="font-size:13px;">${t.id}</code></td>
-            <td>${t.recipientPhone}<br><small style="color:var(--muted);">${fmtPlatform(t.recipientPlatform)}</small></td>
-            <td>${fmtPlatform(t.senderPlatform)} → ${fmtPlatform(t.recipientPlatform)}</td>
-            <td>${fmtAmt(t.amount)} BDT</td>
-            <td><span class="status-pill ${t.status === 'verified' ? 's-verified' : 's-pending'}">${t.status === 'verified' ? 'Verified' : 'Pending'}</span></td>
-            <td>${new Date(t.timestamp).toLocaleDateString()}</td>
-            <td><button class="verify-btn" ${t.status === 'verified' ? 'disabled' : ''} onclick="adminVerify('${t.id}')">${t.status === 'verified' ? 'Done' : 'Verify'}</button></td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function adminVerify(id) {
-    if (!confirm('Verify transaction ' + id + '? This cannot be undone.')) return;
-    if (updateStatus(id, 'verified')) {
-        refreshAdmin();
-        toast('Transaction verified!', 'success');
-    } else {
-        toast('Error verifying transaction.', 'error');
-    }
-}
-
-function exportAllToPDF() {
-    const list = getTxns();
-    if (!list.length) { toast('No transactions to export.', 'info'); return; }
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    doc.setFillColor(26, 107, 71);
-    doc.rect(0, 0, 210, 30, 'F');
-    doc.setTextColor(255,255,255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.text('CASHY Transaction History', 105, 18, { align: 'center' });
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Generated: ' + nowStr(), 105, 26, { align: 'center' });
-
-    doc.autoTable({
-        startY: 38,
-        head: [['Ref ID', 'Receiver', 'Platform', 'Amount', 'Status', 'Date']],
-        body: list.map(t => [
-            t.id,
-            t.recipientPhone,
-            fmtPlatform(t.senderPlatform) + ' → ' + fmtPlatform(t.recipientPlatform),
-            fmtAmt(t.amount) + ' BDT',
-            t.status === 'verified' ? 'Verified' : 'Pending',
-            new Date(t.timestamp).toLocaleDateString()
-        ]),
-        theme: 'striped',
-        headStyles: { fillColor: [45, 150, 96] },
-        margin: { left: 14, right: 14 }
+    // newest first
+    [...txns].reverse().forEach(t => {
+      const st = (t.status||'').toUpperCase();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><code style="font-size:12px;">${t.id}</code></td>
+        <td>${t.recipientPhone}<br><small style="color:var(--muted);">${fmtPlat(t.recipientPlatform)}</small></td>
+        <td>${fmtPlat(t.senderPlatform)} → ${fmtPlat(t.recipientPlatform)}</td>
+        <td>${fmtAmt(t.amount)} BDT</td>
+        <td><span class="sp ${st==='VERIFIED'?'sp-verified':'sp-pending'}">${st==='VERIFIED'?'Verified':'Pending'}</span></td>
+        <td>${t.createdAt||'—'}</td>
+        <td>
+          <button class="vfy-btn" ${st==='VERIFIED'?'disabled':''} onclick="adminVerify('${t.id}')">
+            ${st==='VERIFIED'?'Done':'Verify'}
+          </button>
+          ${st!=='REVERTED'?`<button class="vfy-btn" style="background:var(--red);margin-left:5px;" onclick="adminRevert('${t.id}')">Revert</button>`:''}
+        </td>
+      `;
+      tbody.appendChild(tr);
     });
 
-    const fy = doc.lastAutoTable.finalY + 12;
-    const total = list.reduce((s, t) => s + parseFloat(t.amount), 0);
-    doc.setFontSize(11);
-    doc.setTextColor(0);
-    doc.text(`Total Transactions: ${list.length}  |  Total Amount: ${fmtAmt(total)} BDT  |  Verified: ${list.filter(t=>t.status==='verified').length}  |  Pending: ${list.filter(t=>t.status==='pending').length}`, 14, fy);
-
-    doc.save('CASHY_History_' + new Date().toISOString().split('T')[0] + '.pdf');
-    toast('Export downloaded!', 'success');
+  } catch(e) {
+    document.getElementById('adminTbody').innerHTML =
+      '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--red);">Failed to load. Check your SCRIPT_URL in CFG.</td></tr>';
+  }
 }
 
-/* ══════════════════════════════════════════════
+async function adminVerify(id) {
+  if (!confirm(L('confirm_verify')(id))) return;
+  const res = await verifyTxn(id, 'Verified from admin panel');
+  if (res && res.ok) { toast('Verified! ✅', 'success'); refreshAdmin(); }
+  else toast('Error — check console.', 'error');
+}
+
+async function adminRevert(id) {
+  const reason = prompt('Reason for reverting ' + id + '?');
+  if (!reason) return;
+  const res = await revertTxn(id, reason);
+  if (res && res.ok) { toast('Reverted.', 'info'); refreshAdmin(); }
+  else toast('Error — check console.', 'error');
+}
+
+async function exportPDF() {
+  let txns;
+  try { txns = await fetchAllTxns(); } catch(e) { toast('Could not load transactions.','error'); return; }
+  if (!txns.length) { toast('No transactions to export.','info'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFillColor(26,107,71); doc.rect(0,0,210,28,'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(17);
+  doc.text('CASHY Transaction History',105,17,{align:'center'});
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text('Generated: '+nowStr(),105,25,{align:'center'});
+  doc.autoTable({
+    startY:36,
+    head:[['Ref ID','Receiver','Route','Amount','Status','Date']],
+    body:txns.map(t=>[t.id, t.recipientPhone, fmtPlat(t.senderPlatform)+' → '+fmtPlat(t.recipientPlatform), fmtAmt(t.amount)+' BDT', t.status||'PENDING', t.createdAt||'']),
+    theme:'striped', headStyles:{fillColor:[45,150,96]}, margin:{left:12,right:12}
+  });
+  const fy = doc.lastAutoTable.finalY+12;
+  const tot = txns.reduce((s,t)=>s+parseFloat(t.amount||0),0);
+  doc.setFontSize(11); doc.setTextColor(0);
+  doc.text(`Total: ${txns.length} · ${fmtAmt(tot)} BDT · Verified: ${txns.filter(t=>(t.status||'').toUpperCase()==='VERIFIED').length}`,14,fy);
+  doc.save('CASHY_History_'+new Date().toISOString().split('T')[0]+'.pdf');
+  toast('Export downloaded!','success');
+}
+
+/* ═══════════════════════════════════════════════
    TOAST
-══════════════════════════════════════════════ */
-function toast(msg, type = 'info') {
-    const icons = { success: 'check-circle', error: 'exclamation-circle', info: 'info-circle' };
-    const el = document.createElement('div');
-    el.className = 'toast ' + type;
-    el.innerHTML = '<i class="fas fa-' + icons[type] + '"></i> ' + msg;
-    document.getElementById('toast-container').appendChild(el);
-    setTimeout(() => el.remove(), 4000);
+═══════════════════════════════════════════════ */
+function toast(msg, type='info') {
+  const icons = {success:'check-circle',error:'exclamation-circle',info:'info-circle'};
+  const el = document.createElement('div');
+  el.className = 'toast '+type;
+  el.innerHTML = `<i class="fas fa-${icons[type]}" style="font-size:14px;"></i> ${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(), 4200);
 }
 
-/* ══════════════════════════════════════════════
-   AMOUNT INPUT — LIVE BREAKDOWN
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   LIVE AMOUNT BREAKDOWN
+═══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('amount').addEventListener('input', function() {
+    const val = parseFloat(this.value)||0;
+    const box = document.getElementById('breakdownBox');
+    const savBox = document.getElementById('savingsBox');
+    if (val >= CFG.MIN && val <= CFG.MAX) {
+      const fee = parseFloat((val*CFG.FEE_PCT).toFixed(2));
+      document.getElementById('bAmount').textContent = '৳ '+fmtAmt(val);
+      document.getElementById('bFee').textContent    = '৳ '+fmtAmt(fee);
+      document.getElementById('bTotal').textContent  = '৳ '+fmtAmt(val+fee);
+      box.classList.add('show');
 
-    // Platform pills
-    document.querySelectorAll('.pill').forEach(pill => {
-        pill.addEventListener('click', () => {
-            const type = pill.dataset.type;
-            document.querySelectorAll('.pill[data-type="' + type + '"]').forEach(p => p.classList.remove('selected'));
-            pill.classList.add('selected');
-            document.getElementById(type === 'receiver' ? 'receiverPlatformError' : 'senderPlatformError').classList.remove('show');
-        });
-    });
+      // Savings vs bKash direct
+      const directFee = parseFloat((val*CFG.BKASH_DIRECT_FEE_PCT).toFixed(2));
+      const saving    = parseFloat((directFee - fee).toFixed(2));
+      if (saving > 0) {
+        document.getElementById('savingsTxt').textContent = L('savings')(fmtAmt(saving));
+        savBox.style.display = 'block';
+      } else { savBox.style.display = 'none'; }
 
-    // Phone formatting
-    ['recipientPhone', 'ticketPhone'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('input', () => {
-            el.value = el.value.replace(/\D/g, '').slice(0, 11);
-        });
-    });
+      document.getElementById('e_amt').classList.remove('show');
+    } else {
+      box.classList.remove('show');
+      savBox.style.display = 'none';
+    }
+  });
 
-    // Live amount breakdown
-    document.getElementById('amount').addEventListener('input', function() {
-        const val = parseFloat(this.value) || 0;
-        const box = document.getElementById('breakdownBox');
-        if (val >= CFG.MIN && val <= CFG.MAX) {
-            const fee = parseFloat((val * CFG.FEE_PCT).toFixed(2));
-            document.getElementById('bAmount').textContent = '৳ ' + fmtAmt(val);
-            document.getElementById('bFee').textContent = '৳ ' + fmtAmt(fee);
-            document.getElementById('bTotal').textContent = '৳ ' + fmtAmt(val + fee);
-            box.style.display = 'block';
-            document.getElementById('amountError').classList.remove('show');
-        } else {
-            box.style.display = 'none';
-        }
-    });
+  document.getElementById('adminPwd').addEventListener('keydown', e => { if(e.key==='Enter') checkPwd(); });
+  ['recipientPhone','ticketPhone'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function(){ this.value=this.value.replace(/\D/g,'').slice(0,11); });
+  });
 
-    // Admin password Enter key
-    document.getElementById('adminPassword').addEventListener('keydown', e => {
-        if (e.key === 'Enter') checkPassword();
-    });
+  // Init
+  applyLang();
+  renderQuickSend();
+  toast(L('toast_welcome'), 'info');
 
-    toast('Welcome to CASHY', 'info');
+  // Offline warning
+  if (!isOperating()) {
+    setTimeout(() => toast(L('offline_alert'), 'error'), 800);
+  }
 });
 </script>
 </body>
