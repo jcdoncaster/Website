@@ -863,7 +863,7 @@ tr:hover td { background: rgba(45,150,96,.04); }
         <button class="btn btn-secondary" onclick="goTo(5)">
           <i class="fas fa-life-ring"></i> <span id="btn4a_txt">Help</span>
         </button>
-        <button class="btn btn-primary" onclick="checkStatus()">
+        <button class="btn btn-primary" onclick="manualCheckStatus()">
           <i class="fas fa-sync-alt"></i> <span id="btn4b_txt">Check Status</span>
         </button>
       </div>
@@ -937,7 +937,13 @@ tr:hover td { background: rgba(45,150,96,.04); }
 <!-- ═══════════════════════ ADMIN PANEL ═══════════════════════ -->
 <div id="adminPanel">
   <div class="adm-hdr">
-    <h1>CASHY Admin</h1>
+    <div>
+      <h1>CASHY Admin</h1>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px;display:flex;align-items:center;gap:6px;">
+        <span style="width:7px;height:7px;background:#4ade80;border-radius:50%;display:inline-block;animation:pulse 2s ease-in-out infinite;"></span>
+        <span id="adminLiveEl">Live — refreshes every 8 seconds</span>
+      </div>
+    </div>
     <button class="btn btn-secondary" style="flex:none;padding:9px 16px;font-size:13px;" onclick="closeAdmin()">
       <i class="fas fa-times"></i> Close
     </button>
@@ -1541,7 +1547,7 @@ function confirmPayment() {
 ═══════════════════════════════════════════════ */
 function startCheck() {
   stopCheck();
-  checkStatus();
+  checkStatus(); // immediate first check
   checkTimer = setInterval(checkStatus, CFG.CHECK_INTERVAL);
 }
 
@@ -1550,15 +1556,47 @@ function stopCheck() {
 }
 
 async function checkStatus() {
-  const status = await getStatusRemote(txn.id);
-  if (status === 'VERIFIED' || status === 'PROCESSING') {
-    showSuccess();
+  // Guard: if SCRIPT_URL not set, show a helpful message instead of silent fail
+  if (!CFG.SCRIPT_URL || CFG.SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) {
+    document.getElementById('l_verifying').textContent =
+      lang === 'en'
+        ? '⚠️ SCRIPT_URL not configured — admin must verify manually via Google Sheet.'
+        : '⚠️ SCRIPT_URL সেট করা হয়নি — অ্যাডমিনকে ম্যানুয়ালি যাচাই করতে হবে।';
+    return;
   }
-  // no toast spam on every poll — only show on manual check button
+
+  try {
+    const status = await getStatusRemote(txn.id);
+    if (status === 'VERIFIED' || status === 'PROCESSING') {
+      showSuccess();
+    }
+    // no toast spam — the spinner is enough feedback
+  } catch(e) {
+    // silent — will retry on next interval
+  }
 }
 
 function notifyIfWaiting(id) {
   if (currentStep === 4 && txn.id === id) showSuccess();
+}
+
+// Called by the "Check Status" button — gives visible feedback
+async function manualCheckStatus() {
+  const btn = document.querySelector('#step4 .btn-primary');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking…'; }
+
+  try {
+    const status = await getStatusRemote(txn.id);
+    if (status === 'VERIFIED' || status === 'PROCESSING') {
+      showSuccess();
+    } else {
+      toast(L('toast_status'), 'info');
+    }
+  } catch(e) {
+    toast(lang==='en' ? 'Could not reach server. Try again.' : 'সার্ভারে পৌঁছানো যাচ্ছে না।', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-sync-alt"></i> <span id="btn4b_txt">${L('btn4b_txt')}</span>`; }
+  }
 }
 
 function showSuccess() {
@@ -1671,68 +1709,152 @@ function downloadReceipt() {
 }
 
 /* ═══════════════════════════════════════════════
-   ADMIN
+   ADMIN — live-polling, updates every 8 seconds
+   from anywhere on earth via Google Apps Script
 ═══════════════════════════════════════════════ */
-function showPwdModal() { document.getElementById('pwdModal').classList.add('show'); document.getElementById('adminPwd').focus(); }
-function closePwdModal() { document.getElementById('pwdModal').classList.remove('show'); document.getElementById('adminPwd').value=''; document.getElementById('pwdErr').textContent=''; }
+let adminPollTimer = null;
+const ADMIN_POLL_MS = 8000;
+
+function showPwdModal() {
+  document.getElementById('pwdModal').classList.add('show');
+  document.getElementById('adminPwd').focus();
+}
+
+function closePwdModal() {
+  document.getElementById('pwdModal').classList.remove('show');
+  document.getElementById('adminPwd').value = '';
+  document.getElementById('pwdErr').textContent = '';
+}
+
 function checkPwd() {
   if (document.getElementById('adminPwd').value === CFG.ADMIN_PASSWORD) {
-    closePwdModal(); document.getElementById('adminPanel').classList.add('show'); refreshAdmin();
+    closePwdModal();
+    openAdmin();
   } else {
-    document.getElementById('pwdErr').textContent = lang==='en'?'Incorrect password.':'ভুল পাসওয়ার্ড।';
+    document.getElementById('pwdErr').textContent = lang==='en' ? 'Incorrect password.' : 'ভুল পাসওয়ার্ড।';
     document.getElementById('adminPwd').value = '';
     document.getElementById('adminPwd').classList.add('shake');
-    setTimeout(()=>document.getElementById('adminPwd').classList.remove('shake'),450);
+    setTimeout(() => document.getElementById('adminPwd').classList.remove('shake'), 450);
   }
 }
-function closeAdmin() { document.getElementById('adminPanel').classList.remove('show'); }
 
+function openAdmin() {
+  document.getElementById('adminPanel').classList.add('show');
+  refreshAdmin(); // full load with spinner on open
+
+  // Poll silently every 8s while panel stays open
+  if (adminPollTimer) clearInterval(adminPollTimer);
+  adminPollTimer = setInterval(silentRefreshAdmin, ADMIN_POLL_MS);
+}
+
+function closeAdmin() {
+  document.getElementById('adminPanel').classList.remove('show');
+  if (adminPollTimer) { clearInterval(adminPollTimer); adminPollTimer = null; }
+}
+
+// Called by the 8s timer — no spinner, no flicker
+async function silentRefreshAdmin() {
+  if (!CFG.SCRIPT_URL || CFG.SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) return;
+  try {
+    const [stats, txns] = await Promise.all([ fetchStats(), fetchAllTxns() ]);
+    renderAdminUI(stats, txns, false); // false = don't show "last updated" timestamp
+  } catch(e) { /* silent */ }
+}
+
+// Called manually (button) or on open — shows spinner first
 async function refreshAdmin() {
-  // Show loading state
+  if (!CFG.SCRIPT_URL || CFG.SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) {
+    document.getElementById('adminTbody').innerHTML =
+      `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--red);">
+        ⚠️ SCRIPT_URL not set. Open cashy.html, find <code>CFG.SCRIPT_URL</code> and paste your Apps Script Web App URL.
+      </td></tr>`;
+    return;
+  }
+
   document.getElementById('adminTbody').innerHTML =
-    '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted);"><div class="spinner" style="margin:0 auto;width:32px;height:32px;"></div></td></tr>';
+    `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted);">
+      <div class="spinner" style="margin:0 auto 10px;width:32px;height:32px;border-width:2px;"></div>
+      Loading from Google Sheets…
+    </td></tr>`;
 
   try {
     const [stats, txns] = await Promise.all([ fetchStats(), fetchAllTxns() ]);
-
-    document.getElementById('aS1').textContent = stats.total;
-    document.getElementById('aS2').textContent = parseFloat(stats.amount).toLocaleString('en-BD', {minimumFractionDigits:2});
-    document.getElementById('aS3').textContent = stats.pending;
-    document.getElementById('aS4').textContent = stats.verified;
-
-    const tbody = document.getElementById('adminTbody');
-    tbody.innerHTML = '';
-
-    if (!txns.length) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--muted);">No transactions yet</td></tr>';
-      return;
-    }
-
-    // newest first
-    [...txns].reverse().forEach(t => {
-      const st = (t.status||'').toUpperCase();
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><code style="font-size:12px;">${t.id}</code></td>
-        <td>${t.recipientPhone}<br><small style="color:var(--muted);">${fmtPlat(t.recipientPlatform)}</small></td>
-        <td>${fmtPlat(t.senderPlatform)} → ${fmtPlat(t.recipientPlatform)}</td>
-        <td>${fmtAmt(t.amount)} BDT</td>
-        <td><span class="sp ${st==='VERIFIED'?'sp-verified':'sp-pending'}">${st==='VERIFIED'?'Verified':'Pending'}</span></td>
-        <td>${t.createdAt||'—'}</td>
-        <td>
-          <button class="vfy-btn" ${st==='VERIFIED'?'disabled':''} onclick="adminVerify('${t.id}')">
-            ${st==='VERIFIED'?'Done':'Verify'}
-          </button>
-          ${st!=='REVERTED'?`<button class="vfy-btn" style="background:var(--red);margin-left:5px;" onclick="adminRevert('${t.id}')">Revert</button>`:''}
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-
+    renderAdminUI(stats, txns, true);
   } catch(e) {
     document.getElementById('adminTbody').innerHTML =
-      '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--red);">Failed to load. Check your SCRIPT_URL in CFG.</td></tr>';
+      `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--red);">
+        ❌ Could not reach Google Sheets.<br>
+        <small>Check: SCRIPT_URL is correct, deployed as "Anyone" can access, and no typo in SCRIPT_SECRET.</small>
+      </td></tr>`;
   }
+}
+
+// The actual DOM render — shared by both refresh paths
+function renderAdminUI(stats, txns, showTimestamp) {
+  // Stats bar
+  document.getElementById('aS1').textContent = stats.total;
+  document.getElementById('aS2').textContent = parseFloat(stats.amount||0).toLocaleString('en-BD', {minimumFractionDigits:2});
+  document.getElementById('aS3').textContent = stats.pending;
+  document.getElementById('aS4').textContent = stats.verified;
+
+  // Live indicator in header
+  const liveEl = document.getElementById('adminLiveEl');
+  if (liveEl && showTimestamp) {
+    liveEl.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+  }
+
+  const tbody = document.getElementById('adminTbody');
+
+  if (!txns || !txns.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--muted);">
+      No transactions yet. Waiting for customers…
+    </td></tr>`;
+    return;
+  }
+
+  // Diff check — only re-render if data actually changed
+  // (prevents button flicker during silent polls)
+  const newHash = txns.map(t => t.id + t.status).join('|');
+  if (tbody.dataset.hash === newHash) return; // nothing changed
+  tbody.dataset.hash = newHash;
+
+  tbody.innerHTML = '';
+  [...txns].reverse().forEach(t => {
+    const st  = (t.status || 'PENDING').toUpperCase();
+    const isVerified = st === 'VERIFIED';
+    const isReverted = st === 'REVERTED';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><code style="font-size:12px;">${t.id}</code></td>
+      <td>
+        ${t.recipientPhone}
+        <br><small style="color:var(--muted);">${fmtPlat(t.recipientPlatform)}</small>
+      </td>
+      <td>${fmtPlat(t.senderPlatform)} → ${fmtPlat(t.recipientPlatform)}</td>
+      <td><strong>${fmtAmt(t.amount)}</strong> BDT</td>
+      <td>
+        <span class="sp ${isVerified ? 'sp-verified' : isReverted ? '' : 'sp-pending'}"
+              style="${isReverted ? 'background:#f3f3f3;color:var(--muted)' : ''}">
+          ${isVerified ? '✅ Verified' : isReverted ? '↩ Reverted' : '⏳ Pending'}
+        </span>
+      </td>
+      <td style="font-size:13px;">${t.createdAt || '—'}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="vfy-btn"
+          ${isVerified || isReverted ? 'disabled style="opacity:0.4;"' : ''}
+          onclick="adminVerify('${t.id}')">
+          ${isVerified ? 'Done' : 'Verify ✅'}
+        </button>
+        ${!isReverted && !isVerified ? `
+          <button class="vfy-btn" style="background:var(--red);"
+            onclick="adminRevert('${t.id}')">
+            Revert
+          </button>` : ''}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
 async function adminVerify(id) {
